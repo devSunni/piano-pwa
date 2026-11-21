@@ -1,5 +1,5 @@
 // 캐시 버전: index.html 등을 수정했다면 숫자를 올려서 배포하세요.
-const VERSION = "piano-pwa-v1";
+const VERSION = "piano-pwa-v2";
 const ASSETS = [
   "./",
   "./index.html",

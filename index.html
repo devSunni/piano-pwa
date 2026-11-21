@@ -1564,20 +1564,41 @@
       try {
         const saved = JSON.parse(localStorage.getItem('zfold7_piano_prefs') || 'null');
         if (saved && typeof saved === 'object') {
+          if (['auto', 'dual', 'flex', 'single', 'kids'].includes(saved.mode)) state.mode = saved.mode;
           if (saved.voice) state.voice = saved.voice;
+          if (typeof saved.reverbMix === 'number') state.reverbMix = Math.min(1, Math.max(0, saved.reverbMix));
+          if (typeof saved.masterVolume === 'number') state.masterVolume = Math.min(1, Math.max(0, saved.masterVolume));
           if (typeof saved.whiteKeyCount === 'number') state.whiteKeyCount = Math.min(22, Math.max(8, saved.whiteKeyCount));
-          if (saved.labelMode) state.labelMode = saved.labelMode;
-          if (typeof saved.bpm === 'number') state.bpm = saved.bpm;
+          if (typeof saved.upperOctave === 'number') state.upperOctave = Math.min(6, Math.max(1, saved.upperOctave));
+          if (typeof saved.lowerOctave === 'number') state.lowerOctave = Math.min(5, Math.max(1, saved.lowerOctave));
+          if (typeof saved.sustainLock === 'boolean') state.sustainLock = saved.sustainLock;
+          if (typeof saved.glissando === 'boolean') state.glissando = saved.glissando;
+          if (typeof saved.velocitySensitive === 'boolean') state.velocitySensitive = saved.velocitySensitive;
+          if (['en', 'ko', 'off'].includes(saved.labelMode)) state.labelMode = saved.labelMode;
+          if (typeof saved.bpm === 'number') state.bpm = Math.min(240, Math.max(40, saved.bpm));
+          if (typeof saved.kidsSongId === 'string' && saved.kidsSongId) state.kidsSongId = saved.kidsSongId;
         }
       } catch (e) {}
 
       function savePrefs() {
         try {
+          const baseKeys = (state.kidsMode && state.kidsSavedSettings) ? state.kidsSavedSettings.whiteKeyCount : state.whiteKeyCount;
+          const baseUpper = (state.kidsMode && state.kidsSavedSettings) ? state.kidsSavedSettings.upperOctave : state.upperOctave;
+          const baseLabel = (state.kidsMode && state.kidsSavedSettings) ? state.kidsSavedSettings.labelMode : state.labelMode;
           localStorage.setItem('zfold7_piano_prefs', JSON.stringify({
+            mode: state.mode,
             voice: state.voice,
-            whiteKeyCount: state.whiteKeyCount,
-            labelMode: state.labelMode,
-            bpm: state.bpm
+            reverbMix: state.reverbMix,
+            masterVolume: state.masterVolume,
+            whiteKeyCount: baseKeys,
+            upperOctave: baseUpper,
+            lowerOctave: state.lowerOctave,
+            sustainLock: state.sustainLock,
+            glissando: state.glissando,
+            velocitySensitive: state.velocitySensitive,
+            labelMode: baseLabel,
+            bpm: state.bpm,
+            kidsSongId: state.kidsSongId
           }));
         } catch (e) {}
       }
@@ -2281,6 +2302,7 @@
           stopPlayback();
           state.mode = btn.dataset.mode;
           applyLayoutMode();
+          savePrefs();
           const modeLabelMap = {
             auto: '화면 비율 자동 감지 모드',
             dual: 'Z 폴드 7 펼침 2단 양손 모드',
@@ -2326,6 +2348,7 @@
       document.getElementById('sustainLockBtn').addEventListener('click', () => {
         state.sustainLock = !state.sustainLock;
         updateSustainUI();
+        savePrefs();
         if (!isSustainActive()) releaseAllSustained();
       });
 
@@ -2338,16 +2361,22 @@
         showToast(`음색 변경: ${e.target.options[e.target.selectedIndex].text}`);
       });
 
-      document.getElementById('reverbSlider').addEventListener('input', (e) => {
+      const reverbSlider = document.getElementById('reverbSlider');
+      reverbSlider.value = String(Math.round(state.reverbMix * 100));
+      reverbSlider.addEventListener('input', (e) => {
         state.reverbMix = Number(e.target.value) / 100;
         if (audioCtx) updateReverbMix();
+        savePrefs();
       });
 
-      document.getElementById('volumeSlider').addEventListener('input', (e) => {
+      const volumeSlider = document.getElementById('volumeSlider');
+      volumeSlider.value = String(Math.round(state.masterVolume * 100));
+      volumeSlider.addEventListener('input', (e) => {
         state.masterVolume = Number(e.target.value) / 100;
         if (masterGain && audioCtx) {
           masterGain.gain.setTargetAtTime(state.masterVolume, audioCtx.currentTime, 0.02);
         }
+        savePrefs();
       });
 
       document.getElementById('keysMinusBtn').addEventListener('click', () => {
@@ -2369,38 +2398,50 @@
       document.getElementById('upperOctDown').addEventListener('click', () => {
         if (state.upperOctave > 1) {
           state.upperOctave--;
+          savePrefs();
           renderAllKeyboards();
         }
       });
       document.getElementById('upperOctUp').addEventListener('click', () => {
         if (state.upperOctave < 6) {
           state.upperOctave++;
+          savePrefs();
           renderAllKeyboards();
         }
       });
       document.getElementById('lowerOctDown').addEventListener('click', () => {
         if (state.lowerOctave > 1) {
           state.lowerOctave--;
+          savePrefs();
           renderAllKeyboards();
         }
       });
       document.getElementById('lowerOctUp').addEventListener('click', () => {
         if (state.lowerOctave < 5) {
           state.lowerOctave++;
+          savePrefs();
           renderAllKeyboards();
         }
       });
 
-      document.getElementById('glissToggleBtn').addEventListener('click', (e) => {
+      const glissToggleBtn = document.getElementById('glissToggleBtn');
+      glissToggleBtn.classList.toggle('active', state.glissando);
+      glissToggleBtn.textContent = `슬라이드 연주: ${state.glissando ? 'ON' : 'OFF'}`;
+      glissToggleBtn.addEventListener('click', (e) => {
         state.glissando = !state.glissando;
         e.currentTarget.classList.toggle('active', state.glissando);
         e.currentTarget.textContent = `슬라이드 연주: ${state.glissando ? 'ON' : 'OFF'}`;
+        savePrefs();
       });
 
-      document.getElementById('velocityToggleBtn').addEventListener('click', (e) => {
+      const velocityToggleBtn = document.getElementById('velocityToggleBtn');
+      velocityToggleBtn.classList.toggle('active', state.velocitySensitive);
+      velocityToggleBtn.textContent = `터치 강약: ${state.velocitySensitive ? 'ON' : 'OFF'}`;
+      velocityToggleBtn.addEventListener('click', (e) => {
         state.velocitySensitive = !state.velocitySensitive;
         e.currentTarget.classList.toggle('active', state.velocitySensitive);
         e.currentTarget.textContent = `터치 강약: ${state.velocitySensitive ? 'ON' : 'OFF'}`;
+        savePrefs();
       });
 
       const labelModeBtn = document.getElementById('labelModeBtn');
@@ -2779,10 +2820,15 @@
         }
       }
 
-      document.getElementById('kidsSongSelect').addEventListener('change', (e) => {
+      const kidsSongSelect = document.getElementById('kidsSongSelect');
+      if ([...kidsSongSelect.options].some((o) => o.value === state.kidsSongId)) {
+        kidsSongSelect.value = state.kidsSongId;
+      }
+      kidsSongSelect.addEventListener('change', (e) => {
         stopPlayback();
         state.kidsSongId = e.target.value;
         state.kidsStep = 0;
+        savePrefs();
         renderKidsGuide();
       });
 
