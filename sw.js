@@ -1,5 +1,5 @@
 // 캐시 버전: index.html 등을 수정했다면 숫자를 올려서 배포하세요.
-const VERSION = "piano-pwa-v3";
+const VERSION = "piano-pwa-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -13,10 +13,14 @@ const ASSETS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(VERSION)
-      .then((cache) => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(VERSION).then((cache) => cache.addAll(ASSETS))
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {

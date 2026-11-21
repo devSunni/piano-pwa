@@ -39,6 +39,45 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    @media (display-mode: standalone) {
+      #fullscreenBtn { display: none !important; }
+    }
+
+    .pwa-upd {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 90;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #131720;
+      color: #f1f5f9;
+      border: 1px solid #f59e0b;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+      font-size: 13px;
+      max-width: 94vw;
+    }
+    .pwa-upd.on { display: flex; }
+    .pwa-upd button {
+      border: 1px solid rgba(255,255,255,0.18);
+      background: #1b2130;
+      color: #f1f5f9;
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .pwa-upd #updb {
+      background: #f59e0b;
+      border-color: #f59e0b;
+      color: #0a0c10;
+      font-weight: 700;
+    }
+
     html, body {
       margin: 0;
       padding: 0;
@@ -1249,8 +1288,7 @@
 
       <nav class="mode-switcher" aria-label="화면 레이아웃 모드">
         <button type="button" class="mode-btn active" data-mode="auto" id="modeAutoBtn">자동</button>
-        <button type="button" class="mode-btn" data-mode="dual" id="modeDualBtn">펼침 2단</button>
-        <button type="button" class="mode-btn" data-mode="flex" id="modeFlexBtn">플렉스</button>
+        <button type="button" class="mode-btn" data-mode="dual" id="modeDualBtn">2단 양손</button>
         <button type="button" class="mode-btn" data-mode="single" id="modeSingleBtn">1단 와이드</button>
         <button type="button" class="mode-btn kids-btn" data-mode="kids" id="modeKidsBtn">★ 어린이 배우기</button>
       </nav>
@@ -1286,6 +1324,9 @@
             <option value="butterfly">나비야</option>
             <option value="airplane">비행기</option>
             <option value="bears">곰 세 마리</option>
+            <option value="rabbit">산토끼</option>
+            <option value="birthday">생일 축하합니다</option>
+            <option value="jingle">징글벨</option>
             <option value="free">자유 연주 (무지개 도레미)</option>
           </select>
           <button type="button" class="icon-btn" id="kidsPreviewBtn">▶ 미리 듣기</button>
@@ -2279,7 +2320,7 @@
           renderAllKeyboards();
           renderKidsGuide();
         } else if (target === 'dual') {
-          badge.textContent = w >= 1000 ? '태블릿·대화면에 최적화 · 2단 양손 건반' : '8.0″ 펼침 최적화 · 2단 양손 건반';
+          badge.textContent = '와이드 화면 · 2단 양손 건반';
           upperTitle.textContent = '상단 건반 (오른손 · 멜로디)';
           renderAllKeyboards();
         } else if (target === 'flex') {
@@ -2287,7 +2328,7 @@
           upperTitle.textContent = '하단 메인 건반 (플렉스 테이블)';
           renderAllKeyboards();
         } else {
-          badge.textContent = '6.5″ 커버 / 1단 와이드 건반';
+          badge.textContent = '1단 와이드 건반';
           upperTitle.textContent = '메인 건반 (1단 와이드)';
           renderAllKeyboards();
         }
@@ -2725,6 +2766,37 @@
             { midi: 60, lyric: '애' }, { midi: 60, lyric: '기' }, { midi: 60, lyric: '곰' }
           ]
         },
+        rabbit: {
+          title: '산토끼',
+          notes: [
+            { midi: 67, lyric: '산' }, { midi: 64, lyric: '토' }, { midi: 64, lyric: '끼' },
+            { midi: 67, lyric: '토' }, { midi: 64, lyric: '끼' }, { midi: 60, lyric: '야' },
+            { midi: 62, lyric: '어' }, { midi: 64, lyric: '디' }, { midi: 62, lyric: '를' }, { midi: 60, lyric: '가' }, { midi: 64, lyric: '느' }, { midi: 67, lyric: '냐' },
+            { midi: 72, lyric: '깡' }, { midi: 69, lyric: '총' }, { midi: 72, lyric: '깡' }, { midi: 67, lyric: '총' },
+            { midi: 69, lyric: '뛰' }, { midi: 67, lyric: '면' }, { midi: 64, lyric: '서' },
+            { midi: 67, lyric: '어' }, { midi: 64, lyric: '디' }, { midi: 62, lyric: '를' }, { midi: 64, lyric: '가' }, { midi: 60, lyric: '느' }, { midi: 60, lyric: '냐' }
+          ]
+        },
+        birthday: {
+          title: '생일 축하합니다',
+          notes: [
+            { midi: 60, lyric: '생' }, { midi: 60, lyric: '일' }, { midi: 62, lyric: '축' }, { midi: 60, lyric: '하' }, { midi: 65, lyric: '합' }, { midi: 64, lyric: '니' }, { midi: 64, lyric: '다' },
+            { midi: 60, lyric: '생' }, { midi: 60, lyric: '일' }, { midi: 62, lyric: '축' }, { midi: 60, lyric: '하' }, { midi: 67, lyric: '합' }, { midi: 65, lyric: '니' }, { midi: 65, lyric: '다' },
+            { midi: 60, lyric: '사' }, { midi: 60, lyric: '랑' }, { midi: 72, lyric: '하' }, { midi: 69, lyric: '는' }, { midi: 65, lyric: '우' }, { midi: 64, lyric: '리' }, { midi: 62, lyric: '님' },
+            { midi: 69, lyric: '생' }, { midi: 69, lyric: '일' }, { midi: 67, lyric: '축' }, { midi: 65, lyric: '하' }, { midi: 67, lyric: '합' }, { midi: 65, lyric: '니' }, { midi: 65, lyric: '다' }
+          ]
+        },
+        jingle: {
+          title: '징글벨',
+          notes: [
+            { midi: 64, lyric: '종' }, { midi: 64, lyric: '소' }, { midi: 64, lyric: '리' },
+            { midi: 64, lyric: '울' }, { midi: 64, lyric: '려' }, { midi: 64, lyric: '라' },
+            { midi: 64, lyric: '종' }, { midi: 67, lyric: '소' }, { midi: 60, lyric: '리' }, { midi: 62, lyric: '울' }, { midi: 64, lyric: '려' },
+            { midi: 65, lyric: '우' }, { midi: 65, lyric: '리' }, { midi: 65, lyric: '썰' }, { midi: 65, lyric: '매' },
+            { midi: 65, lyric: '빨' }, { midi: 64, lyric: '리' }, { midi: 64, lyric: '달' }, { midi: 64, lyric: '려' },
+            { midi: 64, lyric: '종' }, { midi: 62, lyric: '소' }, { midi: 62, lyric: '리' }, { midi: 64, lyric: '울' }, { midi: 62, lyric: '려' }, { midi: 67, lyric: '라' }
+          ]
+        },
         free: {
           title: '자유 연주',
           notes: []
@@ -3001,10 +3073,33 @@
       requestAnimationFrame(animLoop);
     })();
   </script>
+  <div id="upd" class="pwa-upd" role="status" aria-live="polite"><span>✨ 새 버전이 준비되었어요</span><button type="button" id="updb">업데이트</button><button type="button" id="updc" aria-label="닫기">✕</button></div>
   <script>
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      let wsw = null, regRef = null, rel = false;
+      const ub = document.getElementById('upd');
+      const showU = (s) => { wsw = s; if (ub) ub.classList.add('on'); };
+      const b1 = document.getElementById('updb'), b2 = document.getElementById('updc');
+      if (b1) b1.onclick = () => { if (wsw) { wsw.postMessage({ type: 'SKIP_WAITING' }); ub.classList.remove('on'); } };
+      if (b2) b2.onclick = () => ub.classList.remove('on');
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (rel) return; rel = true; location.reload();
+      });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          regRef = reg;
+          if (reg.waiting && navigator.serviceWorker.controller) showU(reg.waiting);
+          reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            if (!nw) return;
+            nw.addEventListener('statechange', () => {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) showU(nw);
+            });
+          });
+        }).catch(() => {});
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && regRef) regRef.update().catch(() => {});
       });
     }
   </script>
