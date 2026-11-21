@@ -1,0 +1,2966 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Z Fold 7 스튜디오 피아노</title>
+  <meta name="description" content="모바일·폴더블에 최적화된 오프라인 스튜디오 가상 피아노 PWA" />
+  <meta name="theme-color" content="#0a0c10" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="스튜디오 피아노" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <style>
+    :root {
+      --bg-base: #0a0c10;
+      --bg-panel: #131720;
+      --bg-panel-alt: #1b2130;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.35);
+      --accent-blue: #38bdf8;
+      --accent-blue-glow: rgba(56, 189, 248, 0.35);
+      --accent-rose: #f43f5e;
+      --accent-emerald: #10b981;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    /* App Shell */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100dvh;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      background: radial-gradient(circle at 50% 0%, #171d2b 0%, #0a0c10 65%);
+    }
+
+    /* Top Control Bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 14px;
+      background: rgba(19, 23, 32, 0.92);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+      z-index: 20;
+      min-height: 52px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 14px var(--accent-glow);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+
+    .brand-title strong {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    .brand-title span {
+      font-size: 10px;
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    /* Segmented Mode Switcher */
+    .mode-switcher {
+      display: flex;
+      align-items: center;
+      background: #0c0f16;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .mode-switcher::-webkit-scrollbar {
+      display: none;
+    }
+
+    .mode-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.16s ease;
+    }
+
+    .mode-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .mode-btn.active {
+      background: var(--bg-panel-alt);
+      color: var(--accent);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Right Quick Actions */
+    .quick-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      height: 34px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-panel-alt);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-strong);
+      background: #232b3e;
+    }
+
+    .icon-btn.active {
+      border-color: var(--accent);
+      background: rgba(245, 158, 11, 0.16);
+      color: var(--accent);
+    }
+
+    .icon-btn.recording {
+      border-color: var(--accent-rose);
+      background: rgba(244, 63, 94, 0.2);
+      color: #fb7185;
+      animation: pulseRec 1.1s infinite;
+    }
+
+    .icon-btn.playing {
+      border-color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+    }
+
+    @keyframes pulseRec {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.45); }
+      50% { box-shadow: 0 0 0 6px rgba(244, 63, 94, 0); }
+    }
+
+    /* Studio Monitor / Control Deck */
+    .studio-deck {
+      display: flex;
+      align-items: stretch;
+      gap: 10px;
+      padding: 8px 14px;
+      background: rgba(15, 19, 28, 0.85);
+      border-bottom: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+      transition: all 0.25s ease;
+    }
+
+    .deck-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .deck-monitor {
+      flex: 1.25;
+      min-width: 180px;
+      position: relative;
+      overflow: hidden;
+      padding: 6px 12px;
+    }
+
+    .monitor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      z-index: 2;
+    }
+
+    .chord-readout {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .chord-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      min-width: 58px;
+    }
+
+    .active-notes-text {
+      font-size: 11px;
+      color: var(--accent-blue);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+
+    .visualizer-wrap {
+      width: 100%;
+      height: 36px;
+      position: relative;
+      border-radius: 6px;
+      background: rgba(7, 9, 13, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      overflow: hidden;
+    }
+
+    #visualizerCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Voice & Sound Controls */
+    .deck-controls {
+      flex: 2;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+    }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ctrl-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .select-input {
+      background: #0c0f16;
+      color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 5px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .select-input:focus {
+      border-color: var(--accent);
+    }
+
+    .range-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 72px;
+      height: 5px;
+      border-radius: 99px;
+      background: #242c3d;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .range-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #0a0c10;
+      box-shadow: 0 0 6px var(--accent-glow);
+      cursor: pointer;
+    }
+
+    .stepper {
+      display: inline-flex;
+      align-items: center;
+      background: #0c0f16;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .stepper button {
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      width: 26px;
+      height: 28px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .stepper button:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .stepper span {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 0 6px;
+      color: var(--accent-blue);
+      min-width: 34px;
+      text-align: center;
+    }
+
+    /* Metronome Beat Dots */
+    .beat-dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .beat-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #2b3447;
+      transition: transform 0.08s, background 0.08s;
+    }
+
+    .beat-dot.lit {
+      background: var(--accent);
+      transform: scale(1.35);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .beat-dot.lit.accent-beat {
+      background: var(--accent-blue);
+      box-shadow: 0 0 8px var(--accent-blue-glow);
+    }
+
+    /* Flex Mode Extra Panel (Visible in Flex Mode) */
+    .flex-stage {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      padding: 12px 16px;
+      gap: 10px;
+      border-bottom: 3px solid #040507;
+      box-shadow: inset 0 -10px 24px rgba(0, 0, 0, 0.55);
+      background: linear-gradient(180deg, #111622 0%, #0b0e15 100%);
+      min-height: 0;
+    }
+
+    .flex-hinge-indicator {
+      display: none;
+      height: 14px;
+      background: linear-gradient(180deg, #050608 0%, #151a24 50%, #050608 100%);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .flex-hero-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .flex-visualizer-box {
+      background: #080a0f;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 0;
+    }
+
+    .flex-chord-big {
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .flex-notes-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      min-height: 24px;
+    }
+
+    .note-pill {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.16);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #7dd3fc;
+    }
+
+    .flex-canvas-wrap {
+      flex: 1;
+      min-height: 54px;
+      margin-top: 8px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(15, 20, 30, 0.65);
+    }
+
+    #flexVisualizerCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .flex-pads-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .flex-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .chord-pad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      flex: 1;
+    }
+
+    .chord-pad {
+      border: 1px solid var(--border-strong);
+      background: linear-gradient(180deg, #1f2738 0%, #151b28 100%);
+      color: var(--text-primary);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      transition: all 0.1s ease;
+      touch-action: none;
+    }
+
+    .chord-pad small {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .chord-pad.pressed, .chord-pad:active {
+      background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+      color: #090b10;
+      border-color: #fbbf24;
+      transform: translateY(1px);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+
+    .chord-pad.pressed small {
+      color: rgba(9, 11, 16, 0.78);
+    }
+
+    /* Keyboard Workspace */
+    .keyboard-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 12px 12px;
+      gap: 10px;
+      min-height: 0;
+      position: relative;
+      touch-action: none;
+    }
+
+    .piano-row-wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: #080a0e;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 6px 8px 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+
+    .row-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px 6px;
+      flex-shrink: 0;
+    }
+
+    .row-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .row-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .row-dot.upper { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+    .row-dot.lower { background: var(--accent-blue); box-shadow: 0 0 8px var(--accent-blue-glow); }
+
+    .row-mini-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Piano Keys Container */
+    .piano-keys {
+      position: relative;
+      flex: 1;
+      display: flex;
+      width: 100%;
+      min-height: 0;
+      touch-action: none;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #040507;
+    }
+
+    .white-key {
+      position: relative;
+      flex: 1;
+      height: 100%;
+      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 78%, #e2e8f0 100%);
+      border: 1px solid #cbd5e1;
+      border-top: 2px solid #94a3b8;
+      border-radius: 0 0 8px 8px;
+      margin-right: 1px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 10px;
+      box-shadow: inset 0 -5px 0 rgba(148, 163, 184, 0.45), 0 2px 4px rgba(0, 0, 0, 0.3);
+      transition: transform 0.04s ease, background 0.05s ease, box-shadow 0.05s ease;
+      touch-action: none;
+      z-index: 1;
+    }
+
+    .white-key:last-child {
+      margin-right: 0;
+    }
+
+    .white-key.pressed {
+      background: linear-gradient(180deg, #fef3c7 0%, #fde68a 60%, #fbbf24 100%);
+      box-shadow: inset 0 3px 8px rgba(180, 83, 9, 0.35), 0 0 16px var(--accent-glow);
+      transform: translateY(2px);
+      border-color: #f59e0b;
+    }
+
+    .white-key.lower-row.pressed {
+      background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 60%, #38bdf8 100%);
+      box-shadow: inset 0 3px 8px rgba(3, 105, 161, 0.35), 0 0 16px var(--accent-blue-glow);
+      border-color: #0284c7;
+    }
+
+    .white-key .key-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #475569;
+      pointer-events: none;
+      line-height: 1.1;
+    }
+
+    .white-key .pc-hint {
+      font-size: 9px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-top: 2px;
+      pointer-events: none;
+    }
+
+    .white-key.pressed .key-label {
+      color: #0f172a;
+    }
+
+    .white-key.is-c .key-label {
+      color: #0f172a;
+      background: rgba(15, 23, 42, 0.08);
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .black-key {
+      position: absolute;
+      top: 0;
+      height: 60%;
+      background: linear-gradient(180deg, #272e3d 0%, #11151d 55%, #07090d 100%);
+      border: 1px solid #020305;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+      z-index: 5;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 8px;
+      box-shadow: inset 0 -4px 0 rgba(255, 255, 255, 0.08), inset 1px 0 0 rgba(255, 255, 255, 0.12), 0 4px 8px rgba(0, 0, 0, 0.65);
+      transition: transform 0.04s ease, background 0.05s ease, box-shadow 0.05s ease;
+      touch-action: none;
+    }
+
+    .black-key.pressed {
+      background: linear-gradient(180deg, #d97706 0%, #b45309 70%, #78350f 100%);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 14px var(--accent-glow);
+      transform: translateY(2px);
+      height: 59%;
+    }
+
+    .black-key.lower-row.pressed {
+      background: linear-gradient(180deg, #0284c7 0%, #0369a1 70%, #0c4a6e 100%);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 14px var(--accent-blue-glow);
+    }
+
+    .black-key .key-label {
+      font-size: 9px;
+      font-weight: 700;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+
+    .black-key.pressed .key-label {
+      color: #ffffff;
+    }
+
+    /* Bottom Pedal & Performance Strip */
+    .bottom-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 14px 8px;
+      background: rgba(13, 17, 25, 0.94);
+      border-top: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .pedal-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sustain-pedal {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border-strong);
+      background: linear-gradient(180deg, #1f2738 0%, #141925 100%);
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      touch-action: none;
+      transition: all 0.1s ease;
+    }
+
+    .sustain-pedal.active {
+      background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+      color: #0a0c10;
+      border-color: #fbbf24;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .toggle-pill {
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      background: #141925;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .toggle-pill.active {
+      border-color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.14);
+      color: #7dd3fc;
+    }
+
+    /* Layout Mode Overrides */
+    .app-shell.layout-single #lowerRowWrapper {
+      display: none;
+    }
+
+    .app-shell.layout-flex .studio-deck {
+      padding: 6px 12px;
+    }
+
+    .app-shell.layout-flex .deck-monitor {
+      display: none;
+    }
+
+    .app-shell.layout-flex .flex-stage {
+      display: flex;
+    }
+
+    .app-shell.layout-flex .flex-hinge-indicator {
+      display: flex;
+    }
+
+    .app-shell.layout-flex #lowerRowWrapper {
+      display: none;
+    }
+
+    .app-shell.layout-flex .keyboard-stage {
+      flex: 1.05;
+    }
+
+    /* Native Foldable Half-Opened Horizontal Hinge Detection (Z Fold 7 Flex Mode) */
+    @media (vertical-viewport-segments: 2) {
+      .app-shell.auto-mode .deck-monitor {
+        display: none;
+      }
+      .app-shell.auto-mode .flex-stage {
+        display: flex;
+      }
+      .app-shell.auto-mode .flex-hinge-indicator {
+        display: flex;
+      }
+      .app-shell.auto-mode #lowerRowWrapper {
+        display: none;
+      }
+    }
+
+    /* Responsive adjustments for narrow cover screen (21:9 portrait) or narrow side panel */
+    @media (max-width: 720px) {
+      .top-bar {
+        padding: 6px 10px;
+        gap: 6px;
+      }
+      .brand-title span {
+        display: none;
+      }
+      .studio-deck {
+        flex-direction: column;
+        padding: 6px 10px;
+        gap: 6px;
+      }
+      .deck-monitor {
+        padding: 6px 10px;
+      }
+      .visualizer-wrap {
+        height: 24px;
+      }
+      .deck-controls {
+        gap: 6px 8px;
+      }
+      .hide-sm {
+        display: none !important;
+      }
+      .flex-hero-grid {
+        grid-template-columns: 1fr;
+      }
+      .keyboard-stage {
+        padding: 6px 8px 8px;
+        gap: 6px;
+      }
+      .bottom-strip {
+        padding: 6px 10px;
+        overflow-x: auto;
+      }
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      top: 62px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-10px);
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid var(--accent);
+      color: var(--text-primary);
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.22s ease;
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Demo Drawer Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 7, 11, 0.72);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 80;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .demo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .demo-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--bg-panel-alt);
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .demo-item:hover {
+      border-color: var(--accent);
+      background: #232b3e;
+    }
+
+    .demo-item strong {
+      font-size: 13px;
+      display: block;
+    }
+
+    .demo-item span {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    /* Kids Learning Mode Styles */
+    .mode-btn.kids-btn {
+      color: #fde047;
+    }
+
+    .mode-btn.kids-btn.active {
+      background: linear-gradient(135deg, #f59e0b 0%, #ec4899 100%);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(236, 72, 153, 0.45);
+    }
+
+    .kids-panel {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, #1b1630 0%, #152238 55%, #162926 100%);
+      border-bottom: 1px solid rgba(250, 204, 21, 0.25);
+      flex-shrink: 0;
+    }
+
+    .app-shell.kids-active .kids-panel {
+      display: flex;
+    }
+
+    .app-shell.kids-active .studio-deck,
+    .app-shell.kids-active .flex-stage,
+    .app-shell.kids-active .flex-hinge-indicator,
+    .app-shell.kids-active #lowerRowWrapper {
+      display: none !important;
+    }
+
+    .kids-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .kids-song-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .kids-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(250, 204, 21, 0.16);
+      border: 1px solid rgba(250, 204, 21, 0.45);
+      color: #fde047;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .kids-progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .kids-progress-bar {
+      width: 110px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .kids-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #facc15 0%, #34d399 100%);
+      border-radius: 999px;
+      transition: width 0.2s ease;
+    }
+
+    .kids-star-score {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fde047;
+    }
+
+    .kids-guide-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(9, 12, 20, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 8px 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .kids-guide-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    .kids-note-chip {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      padding: 5px 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 2px solid transparent;
+      transition: all 0.18s ease;
+      flex-shrink: 0;
+    }
+
+    .kids-note-chip .chip-solfege {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+
+    .kids-note-chip .chip-lyric {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .kids-note-chip.done {
+      opacity: 0.42;
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
+    .kids-note-chip.current {
+      background: linear-gradient(135deg, #f59e0b 0%, #ec4899 100%);
+      border-color: #fef08a;
+      transform: scale(1.1);
+      box-shadow: 0 0 14px rgba(250, 204, 21, 0.5);
+    }
+
+    .kids-note-chip.current .chip-solfege,
+    .kids-note-chip.current .chip-lyric {
+      color: #ffffff;
+    }
+
+    .kids-cheer-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.25) 0%, rgba(250, 204, 21, 0.25) 100%);
+      border: 1px solid #34d399;
+      color: #ecfdf5;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .kids-cheer-banner.show {
+      display: flex;
+    }
+
+    /* Rainbow Do-Re-Mi Key Styling in Kids Mode */
+    .app-shell.kids-active .white-key {
+      padding-bottom: 14px;
+      border-bottom-width: 10px;
+      border-bottom-style: solid;
+    }
+
+    .app-shell.kids-active .white-key[data-pc="0"] { border-bottom-color: #ef4444; }
+    .app-shell.kids-active .white-key[data-pc="2"] { border-bottom-color: #f97316; }
+    .app-shell.kids-active .white-key[data-pc="4"] { border-bottom-color: #eab308; }
+    .app-shell.kids-active .white-key[data-pc="5"] { border-bottom-color: #22c55e; }
+    .app-shell.kids-active .white-key[data-pc="7"] { border-bottom-color: #06b6d4; }
+    .app-shell.kids-active .white-key[data-pc="9"] { border-bottom-color: #3b82f6; }
+    .app-shell.kids-active .white-key[data-pc="11"] { border-bottom-color: #a855f7; }
+
+    .app-shell.kids-active .white-key .key-label {
+      font-size: clamp(18px, 3vw, 28px);
+      font-weight: 900;
+      color: #0f172a;
+      background: rgba(255, 255, 255, 0.85);
+      padding: 4px 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+    }
+
+    .app-shell.kids-active .white-key .pc-hint {
+      display: none;
+    }
+
+    .app-shell.kids-active .black-key .key-label {
+      font-size: 11px;
+      color: #e2e8f0;
+    }
+
+    /* Target Next Key Guide Highlight */
+    .white-key.guide-target {
+      background: linear-gradient(180deg, #fef9c3 0%, #fde047 65%, #facc15 100%) !important;
+      box-shadow: inset 0 -6px 0 rgba(202, 138, 4, 0.45), 0 0 22px rgba(250, 204, 21, 0.85) !important;
+      animation: kidsKeyPulse 0.9s ease-in-out infinite;
+    }
+
+    .black-key.guide-target {
+      background: linear-gradient(180deg, #ec4899 0%, #db2777 100%) !important;
+      box-shadow: 0 0 18px rgba(236, 72, 153, 0.9) !important;
+      animation: kidsKeyPulse 0.9s ease-in-out infinite;
+    }
+
+    .guide-star {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ef4444;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 900;
+      padding: 3px 7px;
+      border-radius: 999px;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 3px 10px rgba(239, 68, 68, 0.55);
+      animation: kidsBounce 0.75s ease-in-out infinite;
+      z-index: 8;
+    }
+
+    @keyframes kidsKeyPulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.12); }
+    }
+
+    @keyframes kidsBounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-5px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="appShell" class="app-shell layout-dual auto-mode">
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="brand-group">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a0c10" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="M7 4v9"/>
+            <path d="M12 4v9"/>
+            <path d="M17 4v9"/>
+            <path d="M9.5 13v7"/>
+            <path d="M14.5 13v7"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <strong>Z Fold 7 피아노</strong>
+          <span id="screenProfileBadge">8.0″ 펼침 최적화 · 2단 건반</span>
+        </div>
+      </div>
+
+      <nav class="mode-switcher" aria-label="화면 레이아웃 모드">
+        <button type="button" class="mode-btn active" data-mode="auto" id="modeAutoBtn">자동</button>
+        <button type="button" class="mode-btn" data-mode="dual" id="modeDualBtn">펼침 2단</button>
+        <button type="button" class="mode-btn" data-mode="flex" id="modeFlexBtn">플렉스</button>
+        <button type="button" class="mode-btn" data-mode="single" id="modeSingleBtn">1단 와이드</button>
+        <button type="button" class="mode-btn kids-btn" data-mode="kids" id="modeKidsBtn">★ 어린이 배우기</button>
+      </nav>
+
+      <div class="quick-actions">
+        <button type="button" class="icon-btn" id="recordBtn" title="연주 녹음">
+          <span id="recordDot">●</span>
+          <span class="hide-sm" id="recordLabel">녹음</span>
+        </button>
+        <button type="button" class="icon-btn" id="playRecBtn" title="녹음 재생" disabled style="opacity:0.45;">
+          <span>▶</span>
+          <span class="hide-sm">재생</span>
+        </button>
+        <button type="button" class="icon-btn" id="demoModalBtn" title="데모 곡 연주">
+          <span>♪</span>
+          <span class="hide-sm">데모</span>
+        </button>
+        <button type="button" class="icon-btn" id="fullscreenBtn" title="전체 화면 전환">
+          <span id="fullscreenIcon">⛶</span>
+          <span class="hide-sm" id="fullscreenLabel">전체화면</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Kids Learning Mode Panel -->
+    <section class="kids-panel" id="kidsPanel" aria-label="어린이 피아노 배우기 패널">
+      <div class="kids-top-row">
+        <div class="kids-song-group">
+          <span class="kids-badge">🎵 도레미 따라 치기</span>
+          <select id="kidsSongSelect" class="select-input" aria-label="동요 선택">
+            <option value="twinkle">반짝반짝 작은 별</option>
+            <option value="schoolbell">학교종이 땡땡땡</option>
+            <option value="butterfly">나비야</option>
+            <option value="airplane">비행기</option>
+            <option value="bears">곰 세 마리</option>
+            <option value="free">자유 연주 (무지개 도레미)</option>
+          </select>
+          <button type="button" class="icon-btn" id="kidsPreviewBtn">▶ 미리 듣기</button>
+          <button type="button" class="icon-btn" id="kidsRestartBtn">↺ 처음부터</button>
+        </div>
+
+        <div class="kids-progress-wrap">
+          <div class="kids-progress-bar">
+            <div class="kids-progress-fill" id="kidsProgressFill"></div>
+          </div>
+          <span class="kids-star-score" id="kidsStarScore">⭐ 0 / 14</span>
+        </div>
+      </div>
+
+      <div class="kids-guide-strip" id="kidsGuideStrip"></div>
+
+      <div class="kids-cheer-banner" id="kidsCheerBanner">
+        <span id="kidsCheerText">🎉 와! 곡을 끝까지 연주했어요! 참 잘했어요!</span>
+        <button type="button" class="icon-btn active" id="kidsPlayAgainBtn">다시 치기</button>
+      </div>
+    </section>
+
+    <!-- Studio Monitor & Control Deck -->
+    <section class="studio-deck" aria-label="사운드 및 연주 컨트롤">
+      <div class="deck-card deck-monitor">
+        <div class="monitor-header">
+          <div class="chord-readout">
+            <span class="chord-name" id="chordName">—</span>
+            <span class="active-notes-text" id="activeNotesText">건반을 터치해 연주하세요</span>
+          </div>
+          <span style="font-size:10px; color:var(--text-muted); font-weight:600;" id="polyCount">0음</span>
+        </div>
+        <div class="visualizer-wrap">
+          <canvas id="visualizerCanvas"></canvas>
+        </div>
+      </div>
+
+      <div class="deck-card deck-controls">
+        <div class="ctrl-group">
+          <label class="ctrl-label" for="voiceSelect">음색</label>
+          <select id="voiceSelect" class="select-input">
+            <option value="grand">그랜드 피아노</option>
+            <option value="epiano">일렉트릭 피아노</option>
+            <option value="bright">브라이트 팝</option>
+            <option value="pad">웜 신스 패드</option>
+            <option value="musicbox">오르골</option>
+          </select>
+        </div>
+
+        <div class="ctrl-group">
+          <span class="ctrl-label">리버브</span>
+          <input type="range" id="reverbSlider" class="range-slider" min="0" max="100" value="32" aria-label="리버브 강도" />
+        </div>
+
+        <div class="ctrl-group">
+          <span class="ctrl-label">볼륨</span>
+          <input type="range" id="volumeSlider" class="range-slider" min="0" max="100" value="80" aria-label="마스터 볼륨" />
+        </div>
+
+        <div class="ctrl-group">
+          <span class="ctrl-label">건반 수</span>
+          <div class="stepper">
+            <button type="button" id="keysMinusBtn" aria-label="건반 수 줄이기">−</button>
+            <span id="keysCountVal">14</span>
+            <button type="button" id="keysPlusBtn" aria-label="건반 수 늘리기">+</button>
+          </div>
+        </div>
+
+        <div class="ctrl-group">
+          <button type="button" class="icon-btn" id="metroToggleBtn" style="height:30px; padding:0 8px;">
+            <span>메트로놈</span>
+            <span id="bpmVal" style="color:var(--accent);">100</span>
+          </button>
+          <input type="range" id="bpmSlider" class="range-slider hide-sm" min="45" max="180" value="100" style="width:56px;" aria-label="메트로놈 템포" />
+          <div class="beat-dots" id="beatDots">
+            <span class="beat-dot"></span>
+            <span class="beat-dot"></span>
+            <span class="beat-dot"></span>
+            <span class="beat-dot"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Flex Mode Upper Screen Stage (Half-Folded Top Half) -->
+    <section class="flex-stage" aria-label="플렉스 모드 상단 모니터">
+      <div class="flex-hero-grid">
+        <div class="flex-visualizer-box">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <div class="flex-section-title">실시간 코드 모니터</div>
+              <div class="flex-chord-big" id="flexChordName">Ready</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="flex-section-title">플렉스 모드</div>
+              <div style="font-size:12px; color:var(--accent-blue); font-weight:600; margin-top:2px;">상단 모니터 · 하단 건반</div>
+            </div>
+          </div>
+          <div class="flex-notes-pills" id="flexNotesPills"></div>
+          <div class="flex-canvas-wrap">
+            <canvas id="flexVisualizerCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="flex-pads-box">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="flex-section-title">원터치 반주 코드 패드 (C Key)</span>
+            <span style="font-size:11px; color:var(--text-muted);">누르는 동안 화음 연주</span>
+          </div>
+          <div class="chord-pad-grid" id="chordPadGrid">
+            <button type="button" class="chord-pad" data-chord="C" data-notes="48,52,55,60">C<small>도미솔</small></button>
+            <button type="button" class="chord-pad" data-chord="Dm7" data-notes="50,53,57,60">Dm7<small>레파라도</small></button>
+            <button type="button" class="chord-pad" data-chord="Em7" data-notes="52,55,59,62">Em7<small>미솔시레</small></button>
+            <button type="button" class="chord-pad" data-chord="FM7" data-notes="53,57,60,64">FM7<small>파라도미</small></button>
+            <button type="button" class="chord-pad" data-chord="G7" data-notes="43,47,50,53">G7<small>솔시레파</small></button>
+            <button type="button" class="chord-pad" data-chord="Am7" data-notes="45,48,52,55">Am7<small>라도미솔</small></button>
+            <button type="button" class="chord-pad" data-chord="F/G" data-notes="43,53,57,60">F/G<small>발라드</small></button>
+            <button type="button" class="chord-pad" data-chord="Cadd9" data-notes="48,52,55,62">Cadd9<small>엔딩</small></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flex-hinge-indicator">── GALAXY Z FOLD 7 HINGE LINE ──</div>
+
+    <!-- Piano Keyboards Stage -->
+    <main class="keyboard-stage" id="keyboardStage">
+      <!-- Upper / Main Row -->
+      <div class="piano-row-wrapper" id="upperRowWrapper">
+        <div class="row-header">
+          <div class="row-badge">
+            <span class="row-dot upper"></span>
+            <span id="upperRowTitle">상단 건반 (오른손 · 멜로디)</span>
+          </div>
+          <div class="row-mini-controls">
+            <span class="ctrl-label">옥타브</span>
+            <div class="stepper">
+              <button type="button" id="upperOctDown" aria-label="상단 옥타브 내리기">−</button>
+              <span id="upperOctVal">C4</span>
+              <button type="button" id="upperOctUp" aria-label="상단 옥타브 올리기">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="piano-keys" id="upperKeys" data-row="upper"></div>
+      </div>
+
+      <!-- Lower Row (Shown in Dual / Unfolded Mode) -->
+      <div class="piano-row-wrapper" id="lowerRowWrapper">
+        <div class="row-header">
+          <div class="row-badge">
+            <span class="row-dot lower"></span>
+            <span>하단 건반 (왼손 · 베이스/코드)</span>
+          </div>
+          <div class="row-mini-controls">
+            <span class="ctrl-label">옥타브</span>
+            <div class="stepper">
+              <button type="button" id="lowerOctDown" aria-label="하단 옥타브 내리기">−</button>
+              <span id="lowerOctVal">C2</span>
+              <button type="button" id="lowerOctUp" aria-label="하단 옥타브 올리기">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="piano-keys" id="lowerKeys" data-row="lower"></div>
+      </div>
+    </main>
+
+    <!-- Bottom Performance Strip -->
+    <footer class="bottom-strip">
+      <div class="pedal-group">
+        <button type="button" class="sustain-pedal" id="sustainHoldBtn">
+          <span>서스테인 페달 (누르고 있기)</span>
+        </button>
+        <button type="button" class="toggle-pill" id="sustainLockBtn">페달 고정: OFF</button>
+      </div>
+
+      <div class="pedal-group">
+        <button type="button" class="toggle-pill active" id="glissToggleBtn">슬라이드 연주: ON</button>
+        <button type="button" class="toggle-pill active" id="velocityToggleBtn">터치 강약: ON</button>
+        <button type="button" class="toggle-pill active" id="labelModeBtn">표기: 영문(C4)</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Demo Songs Modal -->
+  <div class="modal-backdrop" id="demoModal">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="demoModalTitle">
+      <div class="modal-header">
+        <h3 id="demoModalTitle">데모 자동 연주</h3>
+        <button type="button" class="icon-btn" id="closeDemoModalBtn">닫기</button>
+      </div>
+      <div class="demo-list">
+        <div class="demo-item" data-demo="canon">
+          <div>
+            <strong>캐논 변주곡 모티브 (Canon in C)</strong>
+            <span>양손 2단 건반 데모 · 부드러운 그랜드 피아노</span>
+          </div>
+          <span style="color:var(--accent); font-weight:700;">▶ 재생</span>
+        </div>
+        <div class="demo-item" data-demo="twinkle">
+          <div>
+            <strong>반짝반짝 작은 별 (아르페지오 편곡)</strong>
+            <span>오르골/피아노 테스트용 맑은 멜로디</span>
+          </div>
+          <span style="color:var(--accent); font-weight:700;">▶ 재생</span>
+        </div>
+        <div class="demo-item" data-demo="jazz">
+          <div>
+            <strong>네오 소울 &amp; 재즈 II-V-I 진행</strong>
+            <span>일렉트릭 피아노 추천 · 실시간 코드 인식 확인</span>
+          </div>
+          <span style="color:var(--accent); font-weight:700;">▶ 재생</span>
+        </div>
+      </div>
+      <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:11px; color:var(--text-muted);">PC 키보드(A-K, Z-M)로도 바로 연주할 수 있습니다.</span>
+        <button type="button" class="icon-btn" id="stopDemoBtn" style="color:#fb7185;">■ 연주 정지</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      // --- Constants & Musical Theory ---
+      const NOTE_NAMES_EN = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const NOTE_NAMES_KO = ['도', '도#', '레', '레#', '미', '파', '파#', '솔', '솔#', '라', '라#', '시'];
+      const WHITE_OFFSETS = [0, 2, 4, 5, 7, 9, 11]; // C D E F G A B
+      const BLACK_AFTER_WHITE = { 0: 1, 2: 3, 5: 6, 7: 8, 9: 10 }; // C# D# F# G# A#
+
+      // PC Keyboard mapping (relative to upper row start note)
+      const PC_KEY_MAP_UPPER = {
+        'KeyA': 0, 'KeyW': 1, 'KeyS': 2, 'KeyE': 3, 'KeyD': 4, 'KeyF': 5,
+        'KeyT': 6, 'KeyG': 7, 'KeyY': 8, 'KeyH': 9, 'KeyU': 10, 'KeyJ': 11,
+        'KeyK': 12, 'KeyO': 13, 'KeyL': 14, 'KeyP': 15, 'Semicolon': 16, 'Quote': 17
+      };
+      const PC_KEY_LABELS = {
+        0: 'A', 1: 'W', 2: 'S', 3: 'E', 4: 'D', 5: 'F',
+        6: 'T', 7: 'G', 8: 'Y', 9: 'H', 10: 'U', 11: 'J',
+        12: 'K', 13: 'O', 14: 'L', 15: 'P', 16: ';', 17: "'"
+      };
+
+      // --- App State ---
+      const state = {
+        mode: 'kids',          // 'auto' | 'dual' | 'flex' | 'single' | 'kids'
+        resolvedLayout: 'single',
+        voice: 'grand',        // 'grand' | 'epiano' | 'bright' | 'pad' | 'musicbox'
+        reverbMix: 0.32,
+        masterVolume: 0.80,
+        whiteKeyCount: 14,     // 8..22
+        upperOctave: 4,        // starts at C4
+        lowerOctave: 2,        // starts at C2
+        sustainHold: false,
+        sustainLock: false,
+        glissando: true,
+        velocitySensitive: true,
+        labelMode: 'ko',       // 'en' | 'ko' | 'off'
+        metroRunning: false,
+        bpm: 100,
+        metroBeat: 0,
+        isRecording: false,
+        recordStartTime: 0,
+        recordedEvents: [],
+        isPlayingBack: false,
+        playbackTimers: [],
+        kidsMode: false,
+        kidsSongId: 'twinkle',
+        kidsStep: 0,
+        kidsSavedSettings: null
+      };
+
+      // Load saved preferences safely
+      try {
+        const saved = JSON.parse(localStorage.getItem('zfold7_piano_prefs') || 'null');
+        if (saved && typeof saved === 'object') {
+          if (saved.voice) state.voice = saved.voice;
+          if (typeof saved.whiteKeyCount === 'number') state.whiteKeyCount = Math.min(22, Math.max(8, saved.whiteKeyCount));
+          if (saved.labelMode) state.labelMode = saved.labelMode;
+          if (typeof saved.bpm === 'number') state.bpm = saved.bpm;
+        }
+      } catch (e) {}
+
+      function savePrefs() {
+        try {
+          localStorage.setItem('zfold7_piano_prefs', JSON.stringify({
+            voice: state.voice,
+            whiteKeyCount: state.whiteKeyCount,
+            labelMode: state.labelMode,
+            bpm: state.bpm
+          }));
+        } catch (e) {}
+      }
+
+      // --- Audio Engine (Web Audio API) ---
+      let audioCtx = null;
+      let masterGain = null;
+      let dryGain = null;
+      let wetGain = null;
+      let convolver = null;
+      let analyser = null;
+      let compressor = null;
+
+      // Active voices: Map<midiNote, Array<voiceObj>>
+      const activeVoices = new Map();
+      // Sustained (released while pedal down): Set<midiNote>
+      const sustainedNotes = new Set();
+      // Currently physically held notes: Map<midiNote, count>
+      const heldNotes = new Map();
+      // Pointer tracking: Map<pointerId, { row, midi, el }>
+      const activePointers = new Map();
+      // PC keyboard tracking: Map<code, midi>
+      const activePcKeys = new Map();
+
+      function ensureAudio() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContextClass({ latencyHint: 'interactive' });
+
+          compressor = audioCtx.createDynamicsCompressor();
+          compressor.threshold.value = -14;
+          compressor.knee.value = 18;
+          compressor.ratio.value = 6;
+          compressor.attack.value = 0.003;
+          compressor.release.value = 0.18;
+
+          masterGain = audioCtx.createGain();
+          masterGain.gain.value = state.masterVolume;
+
+          dryGain = audioCtx.createGain();
+          wetGain = audioCtx.createGain();
+          updateReverbMix();
+
+          convolver = audioCtx.createConvolver();
+          convolver.buffer = createImpulseResponse(audioCtx, 2.2, 2.6);
+
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 1024;
+          analyser.smoothingTimeConstant = 0.82;
+
+          dryGain.connect(compressor);
+          convolver.connect(wetGain);
+          wetGain.connect(compressor);
+
+          compressor.connect(masterGain);
+          masterGain.connect(analyser);
+          analyser.connect(audioCtx.destination);
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      }
+
+      function createImpulseResponse(ctx, duration, decay) {
+        const rate = ctx.sampleRate;
+        const length = Math.floor(rate * duration);
+        const impulse = ctx.createBuffer(2, length, rate);
+        for (let ch = 0; ch < 2; ch++) {
+          const data = impulse.getChannelData(ch);
+          for (let i = 0; i < length; i++) {
+            const env = Math.pow(1 - i / length, decay);
+            data[i] = (Math.random() * 2 - 1) * env * 0.55;
+          }
+        }
+        return impulse;
+      }
+
+      function updateReverbMix() {
+        if (!dryGain || !wetGain) return;
+        const mix = state.reverbMix;
+        dryGain.gain.setTargetAtTime(1 - mix * 0.45, audioCtx.currentTime, 0.02);
+        wetGain.gain.setTargetAtTime(mix * 0.85, audioCtx.currentTime, 0.02);
+      }
+
+      function midiToFreq(midi) {
+        return 440 * Math.pow(2, (midi - 69) / 12);
+      }
+
+      function formatNoteName(midi, mode) {
+        const idx = ((midi % 12) + 12) % 12;
+        const oct = Math.floor(midi / 12) - 1;
+        if (mode === 'ko') return NOTE_NAMES_KO[idx] + oct;
+        return NOTE_NAMES_EN[idx] + oct;
+      }
+
+      function isSustainActive() {
+        return state.sustainHold || state.sustainLock;
+      }
+
+      function triggerNoteOn(midi, velocity = 0.82, record = true) {
+        ensureAudio();
+        const now = audioCtx.currentTime;
+        const freq = midiToFreq(midi);
+        const vel = Math.max(0.18, Math.min(1.0, velocity));
+
+        // If re-striking a sustained note, gently fade old voice
+        if (activeVoices.has(midi)) {
+          stopVoicesForMidi(midi, 0.04);
+        }
+        sustainedNotes.delete(midi);
+
+        const voiceNode = synthesizeVoice(freq, vel, now, state.voice);
+        if (!activeVoices.has(midi)) activeVoices.set(midi, []);
+        activeVoices.get(midi).push(voiceNode);
+
+        heldNotes.set(midi, (heldNotes.get(midi) || 0) + 1);
+        updateKeyVisuals(midi, true);
+        updateChordMonitor();
+        if (record && state.kidsMode) {
+          handleKidsNoteInput(midi);
+        }
+
+        if (record && state.isRecording) {
+          state.recordedEvents.push({
+            type: 'on',
+            midi,
+            vel,
+            time: performance.now() - state.recordStartTime
+          });
+        }
+      }
+
+      function triggerNoteOff(midi, record = true) {
+        const count = (heldNotes.get(midi) || 0) - 1;
+        if (count > 0) {
+          heldNotes.set(midi, count);
+          return;
+        }
+        heldNotes.delete(midi);
+        updateKeyVisuals(midi, false);
+        updateChordMonitor();
+
+        if (record && state.isRecording) {
+          state.recordedEvents.push({
+            type: 'off',
+            midi,
+            time: performance.now() - state.recordStartTime
+          });
+        }
+
+        if (isSustainActive()) {
+          sustainedNotes.add(midi);
+        } else {
+          const releaseSec = state.voice === 'pad' ? 0.85 : (state.voice === 'musicbox' ? 0.7 : 0.24);
+          stopVoicesForMidi(midi, releaseSec);
+        }
+      }
+
+      function releaseAllSustained() {
+        const releaseSec = state.voice === 'pad' ? 0.8 : 0.25;
+        sustainedNotes.forEach((midi) => {
+          if (!heldNotes.has(midi)) {
+            stopVoicesForMidi(midi, releaseSec);
+          }
+        });
+        sustainedNotes.clear();
+      }
+
+      function stopVoicesForMidi(midi, releaseTime) {
+        const list = activeVoices.get(midi);
+        if (!list || !audioCtx) return;
+        const now = audioCtx.currentTime;
+        list.forEach((v) => {
+          try {
+            v.env.gain.cancelScheduledValues(now);
+            v.env.gain.setValueAtTime(Math.max(0.0001, v.env.gain.value), now);
+            v.env.gain.exponentialRampToValueAtTime(0.0001, now + releaseTime);
+            v.oscs.forEach((o) => o.stop(now + releaseTime + 0.03));
+          } catch (e) {}
+        });
+        activeVoices.delete(midi);
+      }
+
+      function synthesizeVoice(freq, vel, now, voiceType) {
+        const env = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+        const oscs = [];
+
+        env.connect(dryGain);
+        env.connect(convolver);
+
+        if (voiceType === 'grand' || voiceType === 'bright') {
+          const isBright = voiceType === 'bright';
+          filter.type = 'lowpass';
+          const startCutoff = Math.min(14000, freq * (isBright ? 10 : 6.5) * (0.6 + vel * 0.6));
+          const endCutoff = Math.min(4000, freq * (isBright ? 3.2 : 1.9));
+          filter.frequency.setValueAtTime(startCutoff, now);
+          filter.frequency.exponentialRampToValueAtTime(Math.max(240, endCutoff), now + 1.4);
+          filter.Q.value = isBright ? 1.2 : 0.7;
+          filter.connect(env);
+
+          // Harmonic stack
+          const partials = isBright
+            ? [
+                { mult: 1, type: 'triangle', gain: 0.52, detune: 0 },
+                { mult: 2, type: 'sawtooth', gain: 0.22, detune: 2 },
+                { mult: 3, type: 'sine', gain: 0.16, detune: -2 },
+                { mult: 4, type: 'sine', gain: 0.09, detune: 3 }
+              ]
+            : [
+                { mult: 1, type: 'triangle', gain: 0.62, detune: -1.5 },
+                { mult: 1, type: 'sine', gain: 0.34, detune: 1.5 },
+                { mult: 2, type: 'sine', gain: 0.22, detune: 0.8 },
+                { mult: 3, type: 'sine', gain: 0.09, detune: -1.2 }
+              ];
+
+          partials.forEach((p) => {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = p.type;
+            osc.frequency.setValueAtTime(freq * p.mult, now);
+            osc.detune.setValueAtTime(p.detune, now);
+            g.gain.setValueAtTime(p.gain, now);
+            osc.connect(g);
+            g.connect(filter);
+            osc.start(now);
+            oscs.push(osc);
+          });
+
+          // Subtle hammer transient
+          const hammerOsc = audioCtx.createOscillator();
+          const hammerGain = audioCtx.createGain();
+          hammerOsc.type = 'triangle';
+          hammerOsc.frequency.setValueAtTime(freq * 4.02, now);
+          hammerGain.gain.setValueAtTime(0.14 * vel, now);
+          hammerGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+          hammerOsc.connect(hammerGain);
+          hammerGain.connect(env);
+          hammerOsc.start(now);
+          hammerOsc.stop(now + 0.055);
+
+          const peak = 0.42 * vel;
+          env.gain.setValueAtTime(0.0001, now);
+          env.gain.linearRampToValueAtTime(peak, now + 0.008);
+          env.gain.exponentialRampToValueAtTime(peak * 0.48, now + 0.35);
+          env.gain.exponentialRampToValueAtTime(0.0008, now + 4.8);
+        } else if (voiceType === 'epiano') {
+          // Rhodes-like FM tine + warm sine
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(Math.min(7000, freq * 5.5), now);
+          filter.connect(env);
+
+          const carrier = audioCtx.createOscillator();
+          const mod = audioCtx.createOscillator();
+          const modGain = audioCtx.createGain();
+
+          carrier.type = 'sine';
+          carrier.frequency.setValueAtTime(freq, now);
+
+          mod.type = 'sine';
+          mod.frequency.setValueAtTime(freq * 14, now);
+          modGain.gain.setValueAtTime(freq * 0.45 * vel, now);
+          modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+
+          mod.connect(modGain);
+          modGain.connect(carrier.frequency);
+
+          const body = audioCtx.createOscillator();
+          const bodyGain = audioCtx.createGain();
+          body.type = 'triangle';
+          body.frequency.setValueAtTime(freq, now);
+          bodyGain.gain.setValueAtTime(0.28, now);
+
+          carrier.connect(filter);
+          body.connect(bodyGain);
+          bodyGain.connect(filter);
+
+          carrier.start(now);
+          mod.start(now);
+          body.start(now);
+          oscs.push(carrier, mod, body);
+
+          const peak = 0.44 * vel;
+          env.gain.setValueAtTime(0.0001, now);
+          env.gain.linearRampToValueAtTime(peak, now + 0.012);
+          env.gain.exponentialRampToValueAtTime(peak * 0.55, now + 0.4);
+          env.gain.exponentialRampToValueAtTime(0.001, now + 4.2);
+        } else if (voiceType === 'pad') {
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(Math.min(3600, freq * 3.8), now);
+          filter.Q.value = 1.6;
+          filter.connect(env);
+
+          [-9, 0, 9].forEach((det) => {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = det === 0 ? 'triangle' : 'sawtooth';
+            osc.frequency.setValueAtTime(freq, now);
+            osc.detune.setValueAtTime(det, now);
+            g.gain.setValueAtTime(det === 0 ? 0.34 : 0.16, now);
+            osc.connect(g);
+            g.connect(filter);
+            osc.start(now);
+            oscs.push(osc);
+          });
+
+          const peak = 0.34 * vel;
+          env.gain.setValueAtTime(0.0001, now);
+          env.gain.linearRampToValueAtTime(peak, now + 0.24);
+          env.gain.exponentialRampToValueAtTime(peak * 0.72, now + 1.8);
+        } else {
+          // Music Box
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
+          const g2 = audioCtx.createGain();
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(freq * 2, now);
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(freq * 5.4, now);
+          g2.gain.setValueAtTime(0.22 * vel, now);
+          g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+          osc1.connect(env);
+          osc2.connect(g2);
+          g2.connect(env);
+          osc1.start(now);
+          osc2.start(now);
+          oscs.push(osc1, osc2);
+
+          const peak = 0.36 * vel;
+          env.gain.setValueAtTime(0.0001, now);
+          env.gain.linearRampToValueAtTime(peak, now + 0.004);
+          env.gain.exponentialRampToValueAtTime(0.0008, now + 2.4);
+        }
+
+        return { env, oscs };
+      }
+
+      // --- Chord Detection ---
+      const CHORD_PATTERNS = [
+        { intervals: [0, 4, 7], suffix: '' },
+        { intervals: [0, 3, 7], suffix: 'm' },
+        { intervals: [0, 4, 7, 11], suffix: 'Maj7' },
+        { intervals: [0, 4, 7, 10], suffix: '7' },
+        { intervals: [0, 3, 7, 10], suffix: 'm7' },
+        { intervals: [0, 5, 7], suffix: 'sus4' },
+        { intervals: [0, 2, 7], suffix: 'sus2' },
+        { intervals: [0, 3, 6], suffix: 'dim' },
+        { intervals: [0, 4, 8], suffix: 'aug' },
+        { intervals: [0, 4, 7, 9], suffix: '6' },
+        { intervals: [0, 2, 4, 7], suffix: 'add9' }
+      ];
+
+      function detectChord(midiList) {
+        if (!midiList.length) return '—';
+        const sorted = [...midiList].sort((a, b) => a - b);
+        if (sorted.length === 1) return formatNoteName(sorted[0], state.labelMode === 'ko' ? 'ko' : 'en');
+        const pcs = [...new Set(sorted.map((m) => ((m % 12) + 12) % 12))];
+        if (pcs.length < 2) return formatNoteName(sorted[0], state.labelMode === 'ko' ? 'ko' : 'en');
+
+        for (const root of pcs) {
+          const rel = pcs.map((pc) => (pc - root + 12) % 12).sort((a, b) => a - b);
+          for (const pat of CHORD_PATTERNS) {
+            if (pat.intervals.length === rel.length && pat.intervals.every((v, i) => v === rel[i])) {
+              const bassPc = sorted[0] % 12;
+              const chordText = NOTE_NAMES_EN[root] + pat.suffix;
+              return bassPc !== root ? `${chordText}/${NOTE_NAMES_EN[bassPc]}` : chordText;
+            }
+          }
+        }
+        return NOTE_NAMES_EN[sorted[0] % 12] + ' +';
+      }
+
+      function updateChordMonitor() {
+        const activeMidi = [...heldNotes.keys()].sort((a, b) => a - b);
+        const chord = detectChord(activeMidi);
+        const mode = state.labelMode === 'ko' ? 'ko' : 'en';
+
+        document.getElementById('chordName').textContent = chord;
+        document.getElementById('flexChordName').textContent = chord === '—' ? 'Ready' : chord;
+        document.getElementById('polyCount').textContent = `${activeMidi.length}음`;
+
+        const textEl = document.getElementById('activeNotesText');
+        const pillsEl = document.getElementById('flexNotesPills');
+
+        if (activeMidi.length === 0) {
+          textEl.textContent = isSustainActive() ? '서스테인 유지 중' : '건반을 터치해 연주하세요';
+          pillsEl.innerHTML = '';
+        } else {
+          const names = activeMidi.map((m) => formatNoteName(m, mode));
+          textEl.textContent = names.join(' · ');
+          pillsEl.innerHTML = names.map((n) => `<span class="note-pill">${n}</span>`).join('');
+        }
+      }
+
+      // --- Keyboard Rendering ---
+      function buildKeyboard(containerEl, startOctave, whiteCount, rowType) {
+        containerEl.innerHTML = '';
+        const startMidi = (startOctave + 1) * 12; // C of startOctave
+        const whiteNotes = [];
+
+        // Generate white notes
+        let octShift = 0;
+        let step = 0;
+        while (whiteNotes.length < whiteCount) {
+          const midi = startMidi + octShift * 12 + WHITE_OFFSETS[step];
+          if (midi <= 108) {
+            whiteNotes.push({ midi, pc: WHITE_OFFSETS[step] });
+          }
+          step++;
+          if (step >= WHITE_OFFSETS.length) {
+            step = 0;
+            octShift++;
+          }
+          if (startMidi + octShift * 12 > 120) break;
+        }
+
+        const totalWhites = whiteNotes.length;
+        const whiteWidthPct = 100 / totalWhites;
+        const blackWidthPct = whiteWidthPct * 0.62;
+
+        // Render White Keys
+        whiteNotes.forEach((wn, idx) => {
+          const key = document.createElement('div');
+          key.className = `white-key ${rowType === 'lower' ? 'lower-row' : ''} ${wn.pc === 0 ? 'is-c' : ''}`;
+          key.dataset.midi = String(wn.midi);
+          key.dataset.pc = String(wn.pc);
+          key.dataset.row = rowType;
+
+          const labelSpan = document.createElement('span');
+          labelSpan.className = 'key-label';
+          if (state.kidsMode) {
+            labelSpan.textContent = NOTE_NAMES_KO[wn.pc];
+          } else {
+            labelSpan.textContent = state.labelMode === 'off' ? '' : formatNoteName(wn.midi, state.labelMode);
+          }
+          key.appendChild(labelSpan);
+
+          if (rowType === 'upper') {
+            const rel = wn.midi - startMidi;
+            if (PC_KEY_LABELS[rel]) {
+              const hint = document.createElement('span');
+              hint.className = 'pc-hint hide-sm';
+              hint.textContent = PC_KEY_LABELS[rel];
+              key.appendChild(hint);
+            }
+          }
+
+          if (heldNotes.has(wn.midi)) key.classList.add('pressed');
+          containerEl.appendChild(key);
+
+          // Render Black Key if exists after this white key and not the very last key
+          if (BLACK_AFTER_WHITE[wn.pc] !== undefined && idx < totalWhites - 1) {
+            const blackMidi = wn.midi + 1;
+            const bKey = document.createElement('div');
+            bKey.className = `black-key ${rowType === 'lower' ? 'lower-row' : ''}`;
+            bKey.dataset.midi = String(blackMidi);
+            bKey.dataset.row = rowType;
+            bKey.style.width = `${blackWidthPct}%`;
+            bKey.style.left = `${(idx + 1) * whiteWidthPct - blackWidthPct / 2}%`;
+
+            const bLabel = document.createElement('span');
+            bLabel.className = 'key-label';
+            if (state.labelMode !== 'off' && totalWhites <= 16) {
+              bLabel.textContent = state.labelMode === 'ko'
+                ? NOTE_NAMES_KO[blackMidi % 12]
+                : NOTE_NAMES_EN[blackMidi % 12];
+            }
+            bKey.appendChild(bLabel);
+
+            if (heldNotes.has(blackMidi)) bKey.classList.add('pressed');
+            containerEl.appendChild(bKey);
+          }
+        });
+      }
+
+      function renderAllKeyboards() {
+        const upperEl = document.getElementById('upperKeys');
+        const lowerEl = document.getElementById('lowerKeys');
+        buildKeyboard(upperEl, state.upperOctave, state.whiteKeyCount, 'upper');
+        buildKeyboard(lowerEl, state.lowerOctave, state.whiteKeyCount, 'lower');
+
+        document.getElementById('upperOctVal').textContent = `C${state.upperOctave}`;
+        document.getElementById('lowerOctVal').textContent = `C${state.lowerOctave}`;
+        document.getElementById('keysCountVal').textContent = String(state.whiteKeyCount);
+        if (state.kidsMode) updateKidsGuideHighlight();
+      }
+
+      function updateKeyVisuals(midi, pressed) {
+        const keys = document.querySelectorAll(`.piano-keys [data-midi="${midi}"]`);
+        keys.forEach((k) => {
+          if (pressed) k.classList.add('pressed');
+          else k.classList.remove('pressed');
+        });
+      }
+
+      // --- Multi-Touch & Glissando Pointer Engine ---
+      function getVelocityFromEvent(e, keyEl) {
+        if (!state.velocitySensitive) return 0.85;
+        const rect = keyEl.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+        return 0.42 + ratio * 0.56;
+      }
+
+      function findKeyAtPoint(x, y) {
+        const el = document.elementFromPoint(x, y);
+        if (!el) return null;
+        return el.closest('.white-key, .black-key');
+      }
+
+      function handleKeyboardPointerDown(e) {
+        const keyEl = e.target.closest('.white-key, .black-key');
+        if (!keyEl) return;
+        e.preventDefault();
+        const midi = Number(keyEl.dataset.midi);
+        const vel = getVelocityFromEvent(e, keyEl);
+
+        activePointers.set(e.pointerId, { midi, el: keyEl });
+        triggerNoteOn(midi, vel);
+      }
+
+      function handleKeyboardPointerMove(e) {
+        if (!activePointers.has(e.pointerId)) return;
+        if (!state.glissando) return;
+        e.preventDefault();
+
+        const prev = activePointers.get(e.pointerId);
+        const keyEl = findKeyAtPoint(e.clientX, e.clientY);
+
+        if (!keyEl) {
+          if (prev.midi !== null) {
+            triggerNoteOff(prev.midi);
+            activePointers.set(e.pointerId, { midi: null, el: null });
+          }
+          return;
+        }
+
+        const nextMidi = Number(keyEl.dataset.midi);
+        if (nextMidi !== prev.midi) {
+          if (prev.midi !== null) triggerNoteOff(prev.midi);
+          const vel = getVelocityFromEvent(e, keyEl);
+          triggerNoteOn(nextMidi, vel);
+          activePointers.set(e.pointerId, { midi: nextMidi, el: keyEl });
+        }
+      }
+
+      function handleKeyboardPointerUp(e) {
+        const prev = activePointers.get(e.pointerId);
+        if (!prev) return;
+        activePointers.delete(e.pointerId);
+        if (prev.midi !== null) {
+          triggerNoteOff(prev.midi);
+        }
+      }
+
+      const stageEl = document.getElementById('keyboardStage');
+      stageEl.addEventListener('pointerdown', handleKeyboardPointerDown);
+      window.addEventListener('pointermove', handleKeyboardPointerMove, { passive: false });
+      window.addEventListener('pointerup', handleKeyboardPointerUp);
+      window.addEventListener('pointercancel', handleKeyboardPointerUp);
+
+      // --- Flex Mode Chord Pads ---
+      const activePadPointers = new Map();
+      document.getElementById('chordPadGrid').addEventListener('pointerdown', (e) => {
+        const pad = e.target.closest('.chord-pad');
+        if (!pad) return;
+        e.preventDefault();
+        const notes = pad.dataset.notes.split(',').map(Number);
+        pad.classList.add('pressed');
+        activePadPointers.set(e.pointerId, { pad, notes });
+        notes.forEach((m, idx) => {
+          setTimeout(() => triggerNoteOn(m, 0.72), idx * 14);
+        });
+      });
+
+      function releasePadPointer(e) {
+        const info = activePadPointers.get(e.pointerId);
+        if (!info) return;
+        activePadPointers.delete(e.pointerId);
+        info.pad.classList.remove('pressed');
+        info.notes.forEach((m) => triggerNoteOff(m));
+      }
+      window.addEventListener('pointerup', releasePadPointer);
+      window.addEventListener('pointercancel', releasePadPointer);
+
+      // --- PC Keyboard Support ---
+      window.addEventListener('keydown', (e) => {
+        if (e.repeat || e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          state.sustainHold = true;
+          updateSustainUI();
+          return;
+        }
+        if (PC_KEY_MAP_UPPER[e.code] !== undefined) {
+          const startMidi = (state.upperOctave + 1) * 12;
+          const midi = startMidi + PC_KEY_MAP_UPPER[e.code];
+          if (!activePcKeys.has(e.code)) {
+            activePcKeys.set(e.code, midi);
+            triggerNoteOn(midi, 0.84);
+          }
+        }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') {
+          state.sustainHold = false;
+          updateSustainUI();
+          if (!isSustainActive()) releaseAllSustained();
+          return;
+        }
+        if (activePcKeys.has(e.code)) {
+          const midi = activePcKeys.get(e.code);
+          activePcKeys.delete(e.code);
+          triggerNoteOff(midi);
+        }
+      });
+
+      // --- Z Fold 7 Screen Detection & Layout Switching ---
+      function applyLayoutMode() {
+        const shell = document.getElementById('appShell');
+        const badge = document.getElementById('screenProfileBadge');
+        const upperTitle = document.getElementById('upperRowTitle');
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const ratio = w / Math.max(1, h);
+
+        let target = state.mode;
+        const isFlexHardware = window.matchMedia && window.matchMedia('(vertical-viewport-segments: 2)').matches;
+
+        if (state.mode === 'auto') {
+          shell.classList.add('auto-mode');
+          if (isFlexHardware) {
+            target = 'flex';
+          } else if (w >= 620 && h >= 540 && ratio >= 0.72 && ratio <= 1.85) {
+            // Unfolded Z Fold 7 (1.11:1) & Galaxy Tab S7 FE (16:10 / 1.6:1)
+            target = 'dual';
+          } else {
+            // Narrow 21:9 cover screen or short landscape bar
+            target = 'single';
+          }
+        } else {
+          shell.classList.remove('auto-mode');
+        }
+
+        const enteringKids = state.mode === 'kids';
+        if (enteringKids && !state.kidsMode) {
+          state.kidsSavedSettings = {
+            whiteKeyCount: state.whiteKeyCount,
+            upperOctave: state.upperOctave,
+            labelMode: state.labelMode
+          };
+          state.kidsMode = true;
+          state.whiteKeyCount = 8; // C4..C5 big rainbow keys for kids
+          state.upperOctave = 4;
+          state.labelMode = 'ko';
+          state.kidsStep = 0;
+          updateLabelBtnText();
+        } else if (!enteringKids && state.kidsMode) {
+          state.kidsMode = false;
+          if (state.kidsSavedSettings) {
+            state.whiteKeyCount = state.kidsSavedSettings.whiteKeyCount;
+            state.upperOctave = state.kidsSavedSettings.upperOctave;
+            state.labelMode = state.kidsSavedSettings.labelMode;
+            state.kidsSavedSettings = null;
+            updateLabelBtnText();
+          }
+        }
+
+        state.resolvedLayout = enteringKids ? 'single' : target;
+        shell.classList.remove('layout-dual', 'layout-flex', 'layout-single', 'kids-active');
+        shell.classList.add(`layout-${state.resolvedLayout}`);
+        if (state.kidsMode) shell.classList.add('kids-active');
+
+        if (state.kidsMode) {
+          badge.textContent = '어린이 배우기 · 큰 무지개 도레미 건반';
+          upperTitle.textContent = '무지개 도레미 건반 (반짝이는 건반을 눌러보세요!)';
+          renderAllKeyboards();
+          renderKidsGuide();
+        } else if (target === 'dual') {
+          badge.textContent = w >= 1000 ? '태블릿·대화면에 최적화 · 2단 양손 건반' : '8.0″ 펼침 최적화 · 2단 양손 건반';
+          upperTitle.textContent = '상단 건반 (오른손 · 멜로디)';
+          renderAllKeyboards();
+        } else if (target === 'flex') {
+          badge.textContent = '플렉스 모드 · 상단 모니터 / 하단 건반';
+          upperTitle.textContent = '하단 메인 건반 (플렉스 테이블)';
+          renderAllKeyboards();
+        } else {
+          badge.textContent = '6.5″ 커버 / 1단 와이드 건반';
+          upperTitle.textContent = '메인 건반 (1단 와이드)';
+          renderAllKeyboards();
+        }
+
+        document.querySelectorAll('.mode-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.mode === state.mode);
+        });
+      }
+
+      document.querySelectorAll('.mode-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          stopPlayback();
+          state.mode = btn.dataset.mode;
+          applyLayoutMode();
+          const modeLabelMap = {
+            auto: '화면 비율 자동 감지 모드',
+            dual: 'Z 폴드 7 펼침 2단 양손 모드',
+            flex: 'Z 폴드 7 플렉스 모드 (반접힘)',
+            single: '1단 와이드 / 커버 화면 모드',
+            kids: '어린이 도레미 배우기 모드 시작!'
+          };
+          showToast(modeLabelMap[state.mode]);
+        });
+      });
+
+      window.addEventListener('resize', () => {
+        if (state.mode === 'auto') applyLayoutMode();
+        resizeVisualizerCanvases();
+      });
+
+      // --- Sustain Pedal UI ---
+      function updateSustainUI() {
+        const holdBtn = document.getElementById('sustainHoldBtn');
+        const lockBtn = document.getElementById('sustainLockBtn');
+        holdBtn.classList.toggle('active', state.sustainHold || state.sustainLock);
+        lockBtn.classList.toggle('active', state.sustainLock);
+        lockBtn.textContent = state.sustainLock ? '페달 고정: ON' : '페달 고정: OFF';
+        updateChordMonitor();
+      }
+
+      const sustainHoldBtn = document.getElementById('sustainHoldBtn');
+      sustainHoldBtn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        state.sustainHold = true;
+        updateSustainUI();
+      });
+      const releaseSustainHold = () => {
+        if (!state.sustainHold) return;
+        state.sustainHold = false;
+        updateSustainUI();
+        if (!isSustainActive()) releaseAllSustained();
+      };
+      sustainHoldBtn.addEventListener('pointerup', releaseSustainHold);
+      sustainHoldBtn.addEventListener('pointerleave', releaseSustainHold);
+      sustainHoldBtn.addEventListener('pointercancel', releaseSustainHold);
+
+      document.getElementById('sustainLockBtn').addEventListener('click', () => {
+        state.sustainLock = !state.sustainLock;
+        updateSustainUI();
+        if (!isSustainActive()) releaseAllSustained();
+      });
+
+      // --- Controls Binding ---
+      const voiceSelect = document.getElementById('voiceSelect');
+      voiceSelect.value = state.voice;
+      voiceSelect.addEventListener('change', (e) => {
+        state.voice = e.target.value;
+        savePrefs();
+        showToast(`음색 변경: ${e.target.options[e.target.selectedIndex].text}`);
+      });
+
+      document.getElementById('reverbSlider').addEventListener('input', (e) => {
+        state.reverbMix = Number(e.target.value) / 100;
+        if (audioCtx) updateReverbMix();
+      });
+
+      document.getElementById('volumeSlider').addEventListener('input', (e) => {
+        state.masterVolume = Number(e.target.value) / 100;
+        if (masterGain && audioCtx) {
+          masterGain.gain.setTargetAtTime(state.masterVolume, audioCtx.currentTime, 0.02);
+        }
+      });
+
+      document.getElementById('keysMinusBtn').addEventListener('click', () => {
+        if (state.whiteKeyCount > 8) {
+          state.whiteKeyCount--;
+          savePrefs();
+          renderAllKeyboards();
+        }
+      });
+
+      document.getElementById('keysPlusBtn').addEventListener('click', () => {
+        if (state.whiteKeyCount < 22) {
+          state.whiteKeyCount++;
+          savePrefs();
+          renderAllKeyboards();
+        }
+      });
+
+      document.getElementById('upperOctDown').addEventListener('click', () => {
+        if (state.upperOctave > 1) {
+          state.upperOctave--;
+          renderAllKeyboards();
+        }
+      });
+      document.getElementById('upperOctUp').addEventListener('click', () => {
+        if (state.upperOctave < 6) {
+          state.upperOctave++;
+          renderAllKeyboards();
+        }
+      });
+      document.getElementById('lowerOctDown').addEventListener('click', () => {
+        if (state.lowerOctave > 1) {
+          state.lowerOctave--;
+          renderAllKeyboards();
+        }
+      });
+      document.getElementById('lowerOctUp').addEventListener('click', () => {
+        if (state.lowerOctave < 5) {
+          state.lowerOctave++;
+          renderAllKeyboards();
+        }
+      });
+
+      document.getElementById('glissToggleBtn').addEventListener('click', (e) => {
+        state.glissando = !state.glissando;
+        e.currentTarget.classList.toggle('active', state.glissando);
+        e.currentTarget.textContent = `슬라이드 연주: ${state.glissando ? 'ON' : 'OFF'}`;
+      });
+
+      document.getElementById('velocityToggleBtn').addEventListener('click', (e) => {
+        state.velocitySensitive = !state.velocitySensitive;
+        e.currentTarget.classList.toggle('active', state.velocitySensitive);
+        e.currentTarget.textContent = `터치 강약: ${state.velocitySensitive ? 'ON' : 'OFF'}`;
+      });
+
+      const labelModeBtn = document.getElementById('labelModeBtn');
+      function updateLabelBtnText() {
+        const textMap = { en: '표기: 영문(C4)', ko: '표기: 계이름(도4)', off: '표기: 숨김' };
+        labelModeBtn.textContent = textMap[state.labelMode];
+        labelModeBtn.classList.toggle('active', state.labelMode !== 'off');
+      }
+      updateLabelBtnText();
+      labelModeBtn.addEventListener('click', () => {
+        const order = ['en', 'ko', 'off'];
+        state.labelMode = order[(order.indexOf(state.labelMode) + 1) % order.length];
+        updateLabelBtnText();
+        savePrefs();
+        renderAllKeyboards();
+        updateChordMonitor();
+      });
+
+      // --- Metronome ---
+      let metroTimer = null;
+      const bpmSlider = document.getElementById('bpmSlider');
+      const bpmVal = document.getElementById('bpmVal');
+      const metroToggleBtn = document.getElementById('metroToggleBtn');
+      const beatDotEls = document.querySelectorAll('#beatDots .beat-dot');
+
+      bpmSlider.value = state.bpm;
+      bpmVal.textContent = String(state.bpm);
+
+      function playMetronomeClick(isAccent) {
+        ensureAudio();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(isAccent ? 1280 : 880, now);
+        gain.gain.setValueAtTime(isAccent ? 0.25 : 0.14, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        osc.connect(gain);
+        gain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 0.045);
+      }
+
+      function stepMetronome() {
+        const beat = state.metroBeat % 4;
+        playMetronomeClick(beat === 0);
+        beatDotEls.forEach((dot, idx) => {
+          dot.classList.toggle('lit', idx === beat);
+          dot.classList.toggle('accent-beat', idx === 0 && beat === 0);
+        });
+        state.metroBeat++;
+      }
+
+      function startMetronome() {
+        stopMetronome();
+        state.metroRunning = true;
+        state.metroBeat = 0;
+        metroToggleBtn.classList.add('active');
+        stepMetronome();
+        metroTimer = setInterval(stepMetronome, (60 / state.bpm) * 1000);
+      }
+
+      function stopMetronome() {
+        if (metroTimer) clearInterval(metroTimer);
+        metroTimer = null;
+        state.metroRunning = false;
+        metroToggleBtn.classList.remove('active');
+        beatDotEls.forEach((d) => d.classList.remove('lit', 'accent-beat'));
+      }
+
+      metroToggleBtn.addEventListener('click', () => {
+        if (state.metroRunning) stopMetronome();
+        else startMetronome();
+      });
+
+      bpmSlider.addEventListener('input', (e) => {
+        state.bpm = Number(e.target.value);
+        bpmVal.textContent = String(state.bpm);
+        savePrefs();
+        if (state.metroRunning) startMetronome();
+      });
+
+      // --- Recording & Playback ---
+      const recordBtn = document.getElementById('recordBtn');
+      const recordLabel = document.getElementById('recordLabel');
+      const playRecBtn = document.getElementById('playRecBtn');
+
+      function stopPlayback() {
+        state.playbackTimers.forEach((t) => clearTimeout(t));
+        state.playbackTimers = [];
+        state.isPlayingBack = false;
+        playRecBtn.classList.remove('playing');
+        // Release any lingering playback notes
+        [...heldNotes.keys()].forEach((m) => triggerNoteOff(m, false));
+      }
+
+      recordBtn.addEventListener('click', () => {
+        if (state.isRecording) {
+          state.isRecording = false;
+          recordBtn.classList.remove('recording');
+          recordLabel.textContent = '녹음';
+          const count = state.recordedEvents.filter((ev) => ev.type === 'on').length;
+          playRecBtn.disabled = count === 0;
+          playRecBtn.style.opacity = count === 0 ? '0.45' : '1';
+          showToast(count > 0 ? `녹음 완료 (${count}개 음표 저장)` : '녹음된 음표가 없습니다');
+        } else {
+          stopPlayback();
+          ensureAudio();
+          state.recordedEvents = [];
+          state.isRecording = true;
+          state.recordStartTime = performance.now();
+          recordBtn.classList.add('recording');
+          recordLabel.textContent = '중지';
+          playRecBtn.disabled = true;
+          playRecBtn.style.opacity = '0.45';
+          showToast('녹음 시작 — 자유롭게 연주하세요');
+        }
+      });
+
+      playRecBtn.addEventListener('click', () => {
+        if (state.isPlayingBack) {
+          stopPlayback();
+          showToast('재생 정지');
+          return;
+        }
+        if (!state.recordedEvents.length) return;
+        ensureAudio();
+        state.isPlayingBack = true;
+        playRecBtn.classList.add('playing');
+        showToast('녹음 연주 재생 중...');
+
+        let maxTime = 0;
+        state.recordedEvents.forEach((ev) => {
+          maxTime = Math.max(maxTime, ev.time);
+          const id = setTimeout(() => {
+            if (ev.type === 'on') triggerNoteOn(ev.midi, ev.vel, false);
+            else triggerNoteOff(ev.midi, false);
+          }, ev.time);
+          state.playbackTimers.push(id);
+        });
+
+        const endId = setTimeout(() => {
+          stopPlayback();
+        }, maxTime + 500);
+        state.playbackTimers.push(endId);
+      });
+
+      // --- Built-in Demo Songs ---
+      const DEMOS = {
+        canon: {
+          title: '캐논 변주곡 모티브',
+          voice: 'grand',
+          notes: [
+            // Bass + Melody pairs: [timeMs, durationMs, midi, vel]
+            [0, 1200, 48, 0.7], [0, 600, 64, 0.85], [600, 600, 67, 0.78],
+            [1200, 1200, 43, 0.7], [1200, 600, 62, 0.84], [1800, 600, 67, 0.76],
+            [2400, 1200, 45, 0.7], [2400, 600, 60, 0.84], [3000, 600, 64, 0.78],
+            [3600, 1200, 40, 0.7], [3600, 600, 59, 0.8], [4200, 600, 64, 0.76],
+            [4800, 1200, 41, 0.72], [4800, 600, 57, 0.84], [5400, 600, 60, 0.8],
+            [6000, 1200, 36, 0.72], [6000, 600, 55, 0.82], [6600, 600, 60, 0.78],
+            [7200, 1200, 41, 0.72], [7200, 600, 57, 0.85], [7800, 600, 65, 0.86],
+            [8400, 1400, 43, 0.75], [8400, 600, 62, 0.86], [9000, 800, 67, 0.88],
+            [9800, 1800, 48, 0.76], [9800, 1800, 64, 0.85], [9800, 1800, 72, 0.9]
+          ]
+        },
+        twinkle: {
+          title: '반짝반짝 작은 별',
+          voice: 'musicbox',
+          notes: [
+            [0, 420, 60, 0.82], [450, 420, 60, 0.82], [900, 420, 67, 0.86], [1350, 420, 67, 0.84],
+            [1800, 420, 69, 0.88], [2250, 420, 69, 0.85], [2700, 850, 67, 0.84],
+            [3600, 420, 65, 0.84], [4050, 420, 65, 0.82], [4500, 420, 64, 0.84], [4950, 420, 64, 0.82],
+            [5400, 420, 62, 0.82], [5850, 420, 62, 0.8], [6300, 1000, 60, 0.88],
+            [0, 1600, 48, 0.6], [1800, 850, 53, 0.6], [2700, 850, 48, 0.6],
+            [3600, 850, 53, 0.6], [4500, 850, 48, 0.6], [5400, 850, 43, 0.6], [6300, 1000, 48, 0.65]
+          ]
+        },
+        jazz: {
+          title: '재즈 II-V-I 진행',
+          voice: 'epiano',
+          notes: [
+            // Dm9
+            [0, 1500, 50, 0.75], [30, 1470, 53, 0.72], [60, 1440, 57, 0.74], [90, 1410, 60, 0.78], [120, 1380, 64, 0.82],
+            // G13
+            [1600, 1500, 43, 0.75], [1630, 1470, 53, 0.72], [1660, 1440, 59, 0.75], [1690, 1410, 64, 0.8], [1720, 1380, 69, 0.82],
+            // CMaj9
+            [3200, 2200, 48, 0.78], [3230, 2170, 52, 0.74], [3260, 2140, 59, 0.78], [3290, 2110, 62, 0.8], [3320, 2080, 67, 0.84]
+          ]
+        }
+      };
+
+      const demoModal = document.getElementById('demoModal');
+      document.getElementById('demoModalBtn').addEventListener('click', () => demoModal.classList.add('open'));
+      document.getElementById('closeDemoModalBtn').addEventListener('click', () => demoModal.classList.remove('open'));
+      demoModal.addEventListener('click', (e) => {
+        if (e.target === demoModal) demoModal.classList.remove('open');
+      });
+
+      document.getElementById('stopDemoBtn').addEventListener('click', () => {
+        stopPlayback();
+        demoModal.classList.remove('open');
+        showToast('데모 연주를 정지했습니다');
+      });
+
+      document.querySelectorAll('.demo-item').forEach((item) => {
+        item.addEventListener('click', () => {
+          const demo = DEMOS[item.dataset.demo];
+          if (!demo) return;
+          stopPlayback();
+          ensureAudio();
+
+          state.voice = demo.voice;
+          voiceSelect.value = demo.voice;
+          demoModal.classList.remove('open');
+          state.isPlayingBack = true;
+          showToast(`데모 재생: ${demo.title}`);
+
+          let maxEnd = 0;
+          demo.notes.forEach(([t, dur, midi, vel]) => {
+            maxEnd = Math.max(maxEnd, t + dur);
+            state.playbackTimers.push(setTimeout(() => triggerNoteOn(midi, vel, false), t));
+            state.playbackTimers.push(setTimeout(() => triggerNoteOff(midi, false), t + dur));
+          });
+          state.playbackTimers.push(setTimeout(() => stopPlayback(), maxEnd + 300));
+        });
+      });
+
+      // --- Kids Learning Mode Songs & Guided Practice ---
+      const KIDS_SONGS = {
+        twinkle: {
+          title: '반짝반짝 작은 별',
+          notes: [
+            { midi: 60, lyric: '반' }, { midi: 60, lyric: '짝' }, { midi: 67, lyric: '반' }, { midi: 67, lyric: '짝' },
+            { midi: 69, lyric: '작' }, { midi: 69, lyric: '은' }, { midi: 67, lyric: '별' },
+            { midi: 65, lyric: '아' }, { midi: 65, lyric: '름' }, { midi: 64, lyric: '답' }, { midi: 64, lyric: '게' },
+            { midi: 62, lyric: '비' }, { midi: 62, lyric: '치' }, { midi: 60, lyric: '네' }
+          ]
+        },
+        schoolbell: {
+          title: '학교종이 땡땡땡',
+          notes: [
+            { midi: 67, lyric: '학' }, { midi: 67, lyric: '교' }, { midi: 69, lyric: '종' }, { midi: 69, lyric: '이' },
+            { midi: 67, lyric: '땡' }, { midi: 67, lyric: '땡' }, { midi: 64, lyric: '땡' },
+            { midi: 67, lyric: '어' }, { midi: 67, lyric: '서' }, { midi: 64, lyric: '모' }, { midi: 64, lyric: '이' },
+            { midi: 62, lyric: '자' },
+            { midi: 67, lyric: '선' }, { midi: 67, lyric: '생' }, { midi: 69, lyric: '님' }, { midi: 69, lyric: '이' },
+            { midi: 67, lyric: '우' }, { midi: 67, lyric: '리' }, { midi: 64, lyric: '를' },
+            { midi: 67, lyric: '기' }, { midi: 64, lyric: '다' }, { midi: 62, lyric: '리' }, { midi: 64, lyric: '신' },
+            { midi: 60, lyric: '다' }
+          ]
+        },
+        butterfly: {
+          title: '나비야',
+          notes: [
+            { midi: 67, lyric: '나' }, { midi: 64, lyric: '비' }, { midi: 64, lyric: '야' },
+            { midi: 65, lyric: '나' }, { midi: 62, lyric: '비' }, { midi: 62, lyric: '야' },
+            { midi: 60, lyric: '이' }, { midi: 62, lyric: '리' }, { midi: 64, lyric: '날' }, { midi: 65, lyric: '아' },
+            { midi: 67, lyric: '오' }, { midi: 67, lyric: '너' }, { midi: 67, lyric: '라' }
+          ]
+        },
+        airplane: {
+          title: '비행기',
+          notes: [
+            { midi: 64, lyric: '떴' }, { midi: 62, lyric: '다' }, { midi: 60, lyric: '떴' }, { midi: 62, lyric: '다' },
+            { midi: 64, lyric: '비' }, { midi: 64, lyric: '행' }, { midi: 64, lyric: '기' },
+            { midi: 62, lyric: '날' }, { midi: 62, lyric: '아' }, { midi: 62, lyric: '라' },
+            { midi: 64, lyric: '날' }, { midi: 67, lyric: '아' }, { midi: 67, lyric: '라' },
+            { midi: 64, lyric: '높' }, { midi: 62, lyric: '이' }, { midi: 60, lyric: '높' }, { midi: 62, lyric: '이' },
+            { midi: 64, lyric: '날' }, { midi: 64, lyric: '아' }, { midi: 64, lyric: '라' },
+            { midi: 62, lyric: '우' }, { midi: 62, lyric: '리' }, { midi: 64, lyric: '비' }, { midi: 62, lyric: '행' },
+            { midi: 60, lyric: '기' }
+          ]
+        },
+        bears: {
+          title: '곰 세 마리',
+          notes: [
+            { midi: 60, lyric: '곰' }, { midi: 60, lyric: '세' }, { midi: 60, lyric: '마' }, { midi: 60, lyric: '리' }, { midi: 60, lyric: '가' },
+            { midi: 64, lyric: '한' }, { midi: 67, lyric: '집' }, { midi: 67, lyric: '에' }, { midi: 64, lyric: '있' }, { midi: 60, lyric: '어' },
+            { midi: 67, lyric: '아' }, { midi: 67, lyric: '빠' }, { midi: 64, lyric: '곰' },
+            { midi: 67, lyric: '엄' }, { midi: 67, lyric: '마' }, { midi: 64, lyric: '곰' },
+            { midi: 60, lyric: '애' }, { midi: 60, lyric: '기' }, { midi: 60, lyric: '곰' }
+          ]
+        },
+        free: {
+          title: '자유 연주',
+          notes: []
+        }
+      };
+
+      function getCurrentKidsSong() {
+        return KIDS_SONGS[state.kidsSongId] || KIDS_SONGS.twinkle;
+      }
+
+      function updateKidsGuideHighlight() {
+        document.querySelectorAll('.piano-keys .guide-target').forEach((el) => el.classList.remove('guide-target'));
+        document.querySelectorAll('.piano-keys .guide-star').forEach((el) => el.remove());
+
+        if (!state.kidsMode) return;
+        const song = getCurrentKidsSong();
+        if (!song.notes.length || state.kidsStep >= song.notes.length) return;
+
+        const targetMidi = song.notes[state.kidsStep].midi;
+        const keyEl = document.querySelector(`#upperKeys [data-midi="${targetMidi}"]`);
+        if (keyEl) {
+          keyEl.classList.add('guide-target');
+          const badge = document.createElement('span');
+          badge.className = 'guide-star';
+          badge.textContent = '★ 여기!';
+          keyEl.appendChild(badge);
+        }
+      }
+
+      function renderKidsGuide() {
+        const strip = document.getElementById('kidsGuideStrip');
+        const fill = document.getElementById('kidsProgressFill');
+        const score = document.getElementById('kidsStarScore');
+        const cheer = document.getElementById('kidsCheerBanner');
+        const song = getCurrentKidsSong();
+
+        if (!song.notes.length) {
+          strip.innerHTML = '<span style="font-size:13px; color:#fde047; font-weight:700;">🌈 무지개 도레미 건반을 마음껏 눌러보며 소리를 익혀보세요!</span>';
+          fill.style.width = '100%';
+          score.textContent = '🌈 자유 연주';
+          cheer.classList.remove('show');
+          updateKidsGuideHighlight();
+          return;
+        }
+
+        const total = song.notes.length;
+        const done = Math.min(state.kidsStep, total);
+        fill.style.width = `${Math.round((done / total) * 100)}%`;
+        score.textContent = `⭐ ${done} / ${total}`;
+
+        strip.innerHTML = song.notes.map((n, idx) => {
+          const solfege = NOTE_NAMES_KO[n.midi % 12];
+          const cls = idx < state.kidsStep ? 'done' : (idx === state.kidsStep ? 'current' : '');
+          return `<div class="kids-note-chip ${cls}" data-step="${idx}"><span class="chip-solfege">${solfege}</span><span class="chip-lyric">${n.lyric}</span></div>`;
+        }).join('');
+
+        const activeChip = strip.querySelector('.kids-note-chip.current');
+        if (activeChip) {
+          activeChip.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+
+        if (state.kidsStep >= total) {
+          document.getElementById('kidsCheerText').textContent = `🎉 "${song.title}" 완주 성공! 정말 잘했어요!`;
+          cheer.classList.add('show');
+        } else {
+          cheer.classList.remove('show');
+        }
+
+        updateKidsGuideHighlight();
+      }
+
+      function playKidsSuccessChime() {
+        ensureAudio();
+        const notes = [60, 64, 67, 72];
+        notes.forEach((m, i) => {
+          setTimeout(() => {
+            triggerNoteOn(m, 0.72, false);
+            setTimeout(() => triggerNoteOff(m, false), 320);
+          }, i * 110);
+        });
+      }
+
+      function handleKidsNoteInput(midi) {
+        const song = getCurrentKidsSong();
+        if (!song.notes.length || state.kidsStep >= song.notes.length) return;
+        const expected = song.notes[state.kidsStep].midi;
+        if (midi === expected) {
+          state.kidsStep++;
+          renderKidsGuide();
+          if (state.kidsStep >= song.notes.length) {
+            setTimeout(playKidsSuccessChime, 260);
+          }
+        }
+      }
+
+      document.getElementById('kidsSongSelect').addEventListener('change', (e) => {
+        stopPlayback();
+        state.kidsSongId = e.target.value;
+        state.kidsStep = 0;
+        renderKidsGuide();
+      });
+
+      document.getElementById('kidsRestartBtn').addEventListener('click', () => {
+        stopPlayback();
+        state.kidsStep = 0;
+        renderKidsGuide();
+        showToast('처음부터 다시 시작해요!');
+      });
+
+      document.getElementById('kidsPlayAgainBtn').addEventListener('click', () => {
+        stopPlayback();
+        state.kidsStep = 0;
+        renderKidsGuide();
+      });
+
+      document.getElementById('kidsPreviewBtn').addEventListener('click', () => {
+        const song = getCurrentKidsSong();
+        if (!song.notes.length) {
+          showToast('동요를 선택하면 미리 들을 수 있어요!');
+          return;
+        }
+        stopPlayback();
+        ensureAudio();
+        state.isPlayingBack = true;
+        showToast(`미리 듣기: ${song.title}`);
+
+        song.notes.forEach((n, idx) => {
+          const start = idx * 430;
+          state.playbackTimers.push(setTimeout(() => triggerNoteOn(n.midi, 0.8, false), start));
+          state.playbackTimers.push(setTimeout(() => triggerNoteOff(n.midi, false), start + 360));
+        });
+        state.playbackTimers.push(setTimeout(() => stopPlayback(), song.notes.length * 430 + 300));
+      });
+
+      // --- Real-time Waveform Visualizer ---
+      const mainCanvas = document.getElementById('visualizerCanvas');
+      const flexCanvas = document.getElementById('flexVisualizerCanvas');
+      const mainCtx = mainCanvas.getContext('2d');
+      const flexCtx = flexCanvas.getContext('2d');
+
+      function resizeVisualizerCanvases() {
+        [mainCanvas, flexCanvas].forEach((c) => {
+          const rect = c.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            c.width = Math.floor(rect.width * dpr);
+            c.height = Math.floor(rect.height * dpr);
+          }
+        });
+      }
+
+      function drawWave(ctx, canvas) {
+        const w = canvas.width;
+        const h = canvas.height;
+        if (!w || !h) return;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Center subtle gridline
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, h / 2);
+        ctx.lineTo(w, h / 2);
+        ctx.stroke();
+
+        const grad = ctx.createLinearGradient(0, 0, w, 0);
+        grad.addColorStop(0, '#38bdf8');
+        grad.addColorStop(0.5, '#f59e0b');
+        grad.addColorStop(1, '#38bdf8');
+
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+
+        if (analyser) {
+          const bufLen = analyser.fftSize;
+          const data = new Uint8Array(bufLen);
+          analyser.getByteTimeDomainData(data);
+          const slice = w / bufLen;
+          let x = 0;
+          for (let i = 0; i < bufLen; i++) {
+            const v = (data[i] - 128) / 128;
+            const y = h / 2 + v * (h * 0.44);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+            x += slice;
+          }
+        } else {
+          ctx.moveTo(0, h / 2);
+          ctx.lineTo(w, h / 2);
+        }
+        ctx.stroke();
+      }
+
+      function animLoop() {
+        drawWave(mainCtx, mainCanvas);
+        if (state.resolvedLayout === 'flex') {
+          drawWave(flexCtx, flexCanvas);
+        }
+        requestAnimationFrame(animLoop);
+      }
+
+      // --- Fullscreen Toggle (Z Fold 7 & Galaxy Tab S7 FE) ---
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      const fullscreenIcon = document.getElementById('fullscreenIcon');
+      const fullscreenLabel = document.getElementById('fullscreenLabel');
+
+      function getFullscreenElement() {
+        return document.fullscreenElement || document.webkitFullscreenElement || null;
+      }
+
+      function syncFullscreenUI() {
+        const isFs = Boolean(getFullscreenElement());
+        fullscreenBtn.classList.toggle('active', isFs);
+        fullscreenIcon.textContent = isFs ? '✕' : '⛶';
+        fullscreenLabel.textContent = isFs ? '전체해제' : '전체화면';
+        setTimeout(resizeVisualizerCanvases, 80);
+      }
+
+      fullscreenBtn.addEventListener('click', () => {
+        const docEl = document.documentElement;
+        if (!getFullscreenElement()) {
+          const req = docEl.requestFullscreen || docEl.webkitRequestFullscreen;
+          if (req) {
+            try {
+              const p = req.call(docEl);
+              if (p && typeof p.catch === 'function') {
+                p.catch(() => {
+                  showToast('기기의 브라우저(삼성 인터넷/Chrome)에서 직접 열면 전체 화면이 작동해요');
+                });
+              }
+            } catch (err) {
+              showToast('기기의 브라우저에서 직접 열면 전체 화면이 작동해요');
+            }
+          } else {
+            showToast('이 브라우저에서는 전체 화면 API를 지원하지 않아요');
+          }
+        } else {
+          const exit = document.exitFullscreen || document.webkitExitFullscreen;
+          if (exit) {
+            try {
+              const p = exit.call(document);
+              if (p && typeof p.catch === 'function') p.catch(() => {});
+            } catch (err) {}
+          }
+        }
+      });
+
+      document.addEventListener('fullscreenchange', syncFullscreenUI);
+      document.addEventListener('webkitfullscreenchange', syncFullscreenUI);
+
+      // --- Toast Helper ---
+      let toastTimer = null;
+      function showToast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 2100);
+      }
+
+      // --- Init ---
+      applyLayoutMode();
+      renderAllKeyboards();
+      updateSustainUI();
+      updateChordMonitor();
+      setTimeout(resizeVisualizerCanvases, 60);
+      requestAnimationFrame(animLoop);
+    })();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
