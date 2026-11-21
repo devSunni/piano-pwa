@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Z Fold 7 스튜디오 피아노",
-  "short_name": "스튜디오 피아노",
+  "name": "스튜디오 피아노",
+  "short_name": "피아노",
   "description": "모바일·폴더블에 최적화된 오프라인 스튜디오 가상 피아노 PWA",
   "lang": "ko",
   "start_url": "./",

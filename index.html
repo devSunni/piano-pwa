@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Z Fold 7 스튜디오 피아노</title>
-  <meta name="description" content="모바일·폴더블에 최적화된 오프라인 스튜디오 가상 피아노 PWA" />
+  <title>스튜디오 피아노</title>
+  <meta name="description" content="모바일·태블릿에 최적화된 오프라인 스튜디오 가상 피아노 PWA" />
   <meta name="theme-color" content="#0a0c10" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="스튜디오 피아노" />
+  <meta name="apple-mobile-web-app-title" content="피아노" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
@@ -1242,8 +1242,8 @@
           </svg>
         </div>
         <div class="brand-title">
-          <strong>Z Fold 7 피아노</strong>
-          <span id="screenProfileBadge">8.0″ 펼침 최적화 · 2단 건반</span>
+          <strong>스튜디오 피아노</strong>
+          <span id="screenProfileBadge">와이드 화면 · 2단 양손 건반</span>
         </div>
       </div>
 
@@ -1409,7 +1409,7 @@
       </div>
     </section>
 
-    <div class="flex-hinge-indicator">── GALAXY Z FOLD 7 HINGE LINE ──</div>
+    <div class="flex-hinge-indicator">── FLEX MODE HINGE LINE ──</div>
 
     <!-- Piano Keyboards Stage -->
     <main class="keyboard-stage" id="keyboardStage">
@@ -2305,9 +2305,9 @@
           savePrefs();
           const modeLabelMap = {
             auto: '화면 비율 자동 감지 모드',
-            dual: 'Z 폴드 7 펼침 2단 양손 모드',
-            flex: 'Z 폴드 7 플렉스 모드 (반접힘)',
-            single: '1단 와이드 / 커버 화면 모드',
+            dual: '2단 양손 건반 모드',
+            flex: '플렉스 모드 (상단 모니터 / 하단 건반)',
+            single: '1단 와이드 건반 모드',
             kids: '어린이 도레미 배우기 모드 시작!'
           };
           showToast(modeLabelMap[state.mode]);
